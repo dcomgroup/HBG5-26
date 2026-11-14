@@ -34,4 +34,44 @@ if(delta<0)card.classList.add('done');
 });
 }
 updateDates();
+const safeParse=k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}};
+const percent=(n,total)=>total>0?Math.round(100*n/total):null;
+function show(card,value,description){
+ const label=card.querySelector('.track-label'),bar=card.querySelector('.fill');
+ if(value===null||!Number.isFinite(value)){label.textContent=description||'Noch kein Lernstand';card.querySelector('.track').style.display='none';return}
+ const pct=Math.max(0,Math.min(100,value));bar.style.width=pct+'%';label.textContent=pct+' % · '+description;
+ card.querySelector('.track').setAttribute('role','progressbar');card.querySelector('.track').setAttribute('aria-valuenow',String(pct));
+}
+function progress(){
+ const cards=[...document.querySelectorAll('.exam')],mathe=safeParse('hbg5-26-mathe-test-01');
+ const mp=mathe?.profiles||{},mn=Object.keys(mp)[0],ms=mp[mn];
+ show(cards[0],ms?percent(Object.values(ms.cards||{}).filter(s=>s.level>=3).length,33):null,'sichere Aufgabentypen · '+(mn||'kein Profil'));
+ const de=safeParse('hbg5-26:deutsch:test-01:profiles-v1'),dp=de?.profiles?.[de.active],ds=dp?.stats;
+ show(cards[1],ds?percent(Object.values(ds).filter(s=>s.streak>=2).length,90):null,'Aufgaben mindestens zweimal in Folge richtig · '+(dp?.profile||''));
+ const en=safeParse('hbg5-26-englisch-vocab'),ep=en?.profiles||{},enName=Object.keys(ep)[0],es=ep[enName]?.cards;
+ show(cards[4],es?percent(Object.values(es).filter(s=>s.streak>=2).length,48):null,'Vokabeln mindestens zweimal in Folge richtig · '+enName);
+ return Promise.resolve().then(()=>new Promise(resolve=>{
+  if(!('indexedDB' in window)){resolve(null);return}
+  const request=indexedDB.open('hbg5-26-latein-v1');
+  request.onerror=()=>resolve(null);
+  request.onupgradeneeded=()=>{request.transaction.abort();resolve(null)};
+  request.onsuccess=()=>{const db=request.result;if(!db.objectStoreNames.contains('progress')){db.close();resolve(null);return}
+   const profile=localStorage.getItem('hbg5-26-latein-profile')||'MB';
+   const tx=db.transaction('progress','readonly'),get=tx.objectStore('progress').get(profile);
+   get.onsuccess=()=>{db.close();resolve(get.result||{})};get.onerror=()=>{db.close();resolve(null)};
+  };
+ })).then(hist=>{
+   if(!hist){show(cards[2],null,'Noch kein Lernstand');show(cards[3],null,'Noch kein Lernstand');return}
+   const tests=[
+    ['parentēs','peristȳlium','officium','explēre','Salvēte!','dīcere','statim','incipere','cūr?','semper','labor','placēre','pergere','esse','clāmāre','venīre','labōrāre','lūdere','cantāre','gaudēre','currere','exspectāre','audīre','rogāre','quaerere','vidēre','intrāre','rīdēre','tenēre','amīcus','amīca','magister','magistra','puer','puella','dominus','domina','servus','serva'],
+    ['quid?','exspectāre','ubi?','equus','ego / mē; tū / tē; nōs / nōs; vōs / vōs','lepus','canis','dēlectāre','bōs','alere','paulō post','villa','salūtāre','iam','eum / eam; eōs / eās','uxor','cēna','parāre','adiuvāre','in','īre','īnstruere','quō?','ad','bene','caedere','servāre','certē','hortus','esse','igitur']
+   ];
+   tests.forEach((words,i)=>{
+    const learned=words.filter(word=>{const id=word.normalize('NFC').toLowerCase().trim();return (hist[id+'|translation']?.streak||0)>=2}).length;
+    show(cards[2+i],percent(learned,words.length),'Vokabeln zweimal in Folge gewusst');
+   });
+ });
+}
+progress();
+window.addEventListener('pageshow',()=>progress());
 </script></body></html>
