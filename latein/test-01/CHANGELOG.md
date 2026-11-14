@@ -1,0 +1,1 @@
+# Changelog\n\n- v1.0.0 (2026-11-14): Erstveröffentlichung, 39 Vokabeln, gemeinsamer Lernstand. Grammatische Einordnung vorläufig, da Originalbuchseiten von Test 01 fehlen.\n
