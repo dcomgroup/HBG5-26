@@ -28,7 +28,7 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 const PROFILE_KEY="hbg5-26-active-profile";
 const prefix="/HBG5-26/";
 const params=new URLSearchParams(location.search);
-const rawPath=decodeURIComponent(location.pathname.startsWith(prefix)?location.pathname.slice(prefix.length):"").replace(/\\/$/,"");
+const rawPath=decodeURIComponent(location.pathname.startsWith(prefix)?location.pathname.slice(prefix.length):"").replace(/\/$/,"");
 const validSlug=v=>/^[a-z0-9][a-z0-9-]{2,23}$/.test(v);
 const fromLink=params.get("p")||rawPath;
 let activeProfile=validSlug(fromLink)?fromLink:null;
@@ -50,7 +50,7 @@ function showProfile(){
  }else{
   box.innerHTML='<strong>Testversion</strong><p class="hint">Hier kannst du die Lernapps ausprobieren. Die Lernstände bleiben auf diesem Gerät.</p><h2>Eigenes Lernprofil anlegen</h2><p class="hint">Wähle einen Namen für deinen persönlichen Lernlink, zum Beispiel squirrel26, salve123 oder tiger2026.</p><input id="profile-name" maxlength="24" placeholder="Dein Wunschname" aria-label="Dein Wunschname"> <button id="create-profile">Profil anlegen</button><p class="error" id="profile-error" role="alert"></p>';
   document.getElementById("create-profile").onclick=()=>{
-   const v=document.getElementById("profile-name").value.trim().toLowerCase().replace(/\\s+/g,"-");
+   const v=document.getElementById("profile-name").value.trim().toLowerCase().replace(/\s+/g,"-");
    if(!validSlug(v)){document.getElementById("profile-error").textContent="Bitte 3 bis 24 Zeichen verwenden: Buchstaben a-z, Zahlen oder Bindestriche.";return}
    activeProfile=v;history.replaceState(null,"",prefix+encodeURIComponent(v));
    showProfile();profileLinks();
