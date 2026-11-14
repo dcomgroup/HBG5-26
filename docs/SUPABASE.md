@@ -45,3 +45,11 @@ Kostenlos starten. Ein täglicher GitHub-Actions-Keep-alive ist nur eine geplant
 - Vor Anwendung prüfen, ob `extensions.digest` verfügbar ist. Bei Fehler keine unsichere Ersatzfunktion verwenden.
 - Der sequentielle Doppelreservierungstest wurde am 2026-11-14 mit erwartetem Fehler `23505: Profile name already reserved` bestätigt; der Test lief in einer Transaktion und wurde zurückgerollt. Kein Parallelitätstest und kein Browser-API-Test durchgeführt.
 - Noch ausstehend: echte parallele Reservierung, isolierter Lese-/Schreibzugriff, Missbrauchsschutz, Offline-Merge und Migrationstests.
+
+## Direkt geprüfter Stand (2026-11-14)
+- Supabase-Verbindung zu Projekt `velspjtxenbvvwgptahh` funktioniert.
+- `append_learning_event` und `read_learning_events` wurden direkt in der Datenbank erstellt; Schreiben und Lesen in einer zurückgerollten Testtransaktion erfolgreich (1 Ereignis).
+- `anon` hat EXECUTE auf den beiden RPCs, jedoch keinen direkten SELECT/INSERT-Zugriff auf `learning_events`.
+- Öffentliches EXECUTE für `rls_auto_enable()` entzogen und geprüft.
+- Sicherheitsadvisor meldet die drei bewusst anonym erreichbaren SECURITY-DEFINER-RPCs; deren Geheimnisprüfung und Missbrauchsschutz sind vor Produktivfreigabe separat zu testen. RLS-ohne-Policy ist bei gesperrten Tabellen beabsichtigt.
+- Noch nicht freigegeben: Browserintegration, Profilisolation/Fehlerschlüsseltests, Synchronisationskonflikte, Migration, Rate-Limits, Pagination über 10.000 Ereignisse.
