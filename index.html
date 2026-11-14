@@ -41,23 +41,50 @@ function profileLinks(){
  a.href=url.href;
  });
 }
+const RESERVED_PROFILES=new Set(["index","404","shared","mathe","deutsch","biologie","latein","englisch","test","demo","admin"]);
+const PROFILE_REGISTRY_KEY="hbg5-26-local-profile-names";
+const animals=["fuchs","otter","panda","eule","koala","tiger","dachs","falke","luchs","biber","milan","robbe"];
+function knownProfiles(){try{return JSON.parse(localStorage.getItem(PROFILE_REGISTRY_KEY)||"[]")}catch{return []}}
+function freshSuggestions(){
+ const existing=new Set(knownProfiles());if(activeProfile)existing.add(activeProfile);
+ const result=[];let attempts=0;
+ while(result.length<3&&attempts++<40){
+  const bytes=new Uint8Array(4);crypto.getRandomValues(bytes);
+  const suffix=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
+  const name=animals[bytes[0]%animals.length]+"-"+suffix;
+  if(!existing.has(name)&&!result.includes(name))result.push(name);
+ }
+ return result;
+}
 function showProfile(){
  if(activeProfile){
   localStorage.setItem(PROFILE_KEY,activeProfile);
-  box.innerHTML='<strong>Dein Lernprofil: '+activeProfile+'</strong><p class="hint">Dieser Link öffnet dein Profil auf diesem Gerät. Eine geräteübergreifende Synchronisation ist noch nicht eingerichtet.</p><p><button id="switch-profile">Anderes Profil anlegen</button> <button id="demo-profile">Testversion öffnen</button></p>';
-  document.getElementById("switch-profile").onclick=()=>{activeProfile=null;showProfile()};
+  box.innerHTML='<strong>Dein Lernprofil: '+activeProfile+'</strong><p class="hint">Dieser Link öffnet dein Profil auf diesem Gerät. Eine geräteübergreifende Synchronisation ist noch nicht eingerichtet.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testversion öffnen</button></p>';
+  document.getElementById("switch-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
   document.getElementById("demo-profile").onclick=()=>{location.href=prefix};
  }else{
-  box.innerHTML='<strong>Testversion</strong><p class="hint">Hier kannst du die Lernapps ausprobieren. Die Lernstände bleiben auf diesem Gerät.</p><h2>Eigenes Lernprofil anlegen</h2><p class="hint">Wähle einen Namen für deinen persönlichen Lernlink, zum Beispiel squirrel26, salve123 oder tiger2026.</p><input id="profile-name" maxlength="24" placeholder="Dein Wunschname" aria-label="Dein Wunschname"> <button id="create-profile">Profil anlegen</button><p class="error" id="profile-error" role="alert"></p>';
-  document.getElementById("create-profile").onclick=()=>{
-   const v=document.getElementById("profile-name").value.trim().toLowerCase().replace(/\s+/g,"-");
-   if(!validSlug(v)){document.getElementById("profile-error").textContent="Bitte 3 bis 24 Zeichen verwenden: Buchstaben a-z, Zahlen oder Bindestriche.";return}
-   activeProfile=v;history.replaceState(null,"",prefix+encodeURIComponent(v));
-   showProfile();profileLinks();
-   box.insertAdjacentHTML("beforeend",'<p><strong>Profil angelegt.</strong> Bitte deine Eltern, diesen Link als Lesezeichen zu speichern:</p><p><code id="profile-link"></code></p><button id="copy-profile">Link kopieren</button>');
-   document.getElementById("profile-link").textContent=location.href;
-   document.getElementById("copy-profile").onclick=()=>navigator.clipboard?.writeText(location.href);
-  };
+  box.innerHTML='<strong>Testversion</strong><p class="hint">Hier kannst du die Lernapps ausprobieren. Die Lernstände bleiben auf diesem Gerät.</p><h2>Eigenes Lernprofil</h2><p class="hint">Wähle einen vorgeschlagenen Lernlink. Die zufälligen Zeichen machen doppelte Namen sehr unwahrscheinlich.</p><div id="profile-choices"></div><p><button id="refresh-profiles" type="button">Andere Vorschläge</button></p><p class="error" id="profile-error" role="alert"></p><p class="hint">Die zentrale Prüfung, ob ein Name bereits auf einem anderen Gerät verwendet wird, folgt mit der Datenbankanbindung.</p>';
+  const choices=document.getElementById("profile-choices");
+  function drawSuggestions(){
+   choices.replaceChildren();
+   freshSuggestions().forEach(name=>{
+    const button=document.createElement("button");button.type="button";button.textContent=name;button.style.margin="0 8px 8px 0";
+    button.onclick=()=>{
+     if(!validSlug(name)||RESERVED_PROFILES.has(name)||knownProfiles().includes(name)){
+      document.getElementById("profile-error").textContent="Dieser Name ist bereits auf diesem Gerät vergeben. Bitte wähle einen anderen.";drawSuggestions();return;
+     }
+     const known=knownProfiles();known.push(name);localStorage.setItem(PROFILE_REGISTRY_KEY,JSON.stringify(known));
+     activeProfile=name;history.replaceState(null,"",prefix+encodeURIComponent(name));
+     showProfile();
+     box.insertAdjacentHTML("beforeend",'<p><strong>Dein persönlicher Link:</strong></p><p><code id="profile-link"></code></p><button id="copy-profile">Link kopieren</button>');
+     document.getElementById("profile-link").textContent=location.href;
+     document.getElementById("copy-profile").onclick=()=>navigator.clipboard?.writeText(location.href);
+    };
+    choices.append(button);
+   });
+  }
+  document.getElementById("refresh-profiles").onclick=drawSuggestions;
+  drawSuggestions();
  }
  profileLinks();
 }
