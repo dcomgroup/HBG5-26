@@ -1,0 +1,32 @@
+name: Import biology learning app
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch original app and migrate
+        run: |
+          curl -fL --retry 3 -o /tmp/sinnesorgane.zip https://raw.githubusercontent.com/dcomgroup/sinnesorgane-quiz/main/sinnesorgane_quiz_kompakt.zip
+          mkdir -p biologie/klassenarbeit-01
+          unzip -q -o /tmp/sinnesorgane.zip -d biologie/klassenarbeit-01
+          python3 .github/scripts/migrate_sinnesorgane.py
+          test "$(find biologie/klassenarbeit-01/images -name '*.jpg' | wc -l)" -eq 104
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('biologie/klassenarbeit-01/cards.json')
+          assert len(json.loads(p.read_text()))==52
+          html=Path('biologie/klassenarbeit-01/index.html').read_text()
+          assert 'enhancements.js' in html
+          assert 'hbg5-26-bio-ka01-learn-v1-' in html
+          PY
+      - name: Commit migrated app
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add biologie/klassenarbeit-01/
+          git diff --cached --quiet || (git commit -m "Migrate Sinnesorgane quiz to biology classwork 01" && git push)
