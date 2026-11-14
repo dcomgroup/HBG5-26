@@ -11,6 +11,11 @@ function open(){return new Promise(resolve=>{if(!("indexedDB" in window)){resolv
 async function read(){if(!db)return {};return new Promise(resolve=>{let tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).get(profile);r.onsuccess=()=>resolve(r.result||{});r.onerror=()=>resolve({})})}
 async function write(v){if(!db)return;return new Promise(resolve=>{let tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(v,profile);tx.oncomplete=resolve;tx.onerror=resolve})}
 let history={};
+const sync=window.HBG_LATIN_SYNC;
+const pendingKey=()=>"__pending_sync__"+profile;
+async function flushPending(){if(!sync?.enabled||!db)return;const events=await new Promise(resolve=>{const r=db.transaction(STORE,"readonly").objectStore(STORE).get(pendingKey());r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>resolve([])});const remaining=[];for(const event of events){try{await sync.append(event)}catch{remaining.push(event)}}await new Promise(resolve=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(remaining,pendingKey());tx.oncomplete=resolve;tx.onerror=resolve});}
+async function enqueueEvent(event){if(!sync?.enabled||!db)return;await new Promise(resolve=>{const tx=db.transaction(STORE,"readwrite"),store=tx.objectStore(STORE),r=store.get(pendingKey());r.onsuccess=()=>store.put([...(r.result||[]),event],pendingKey());tx.oncomplete=resolve;tx.onerror=resolve});flushPending().catch(()=>{});}
+
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const shuffle=a=>a.sort(()=>Math.random()-.5);
 const available=()=>[...all.values()].filter(x=>mode==="all"||x.tests.includes(test));
@@ -27,6 +32,6 @@ if(x){if(!shown)document.getElementById("reveal").onclick=()=>{shown=true;render
 document.getElementById("export").onclick=()=>{let blob=new Blob([JSON.stringify({format:"hbg5-26-latein-v1",profile,history,exported:new Date().toISOString()},null,2)],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="latein-lernstand-"+profile+".json";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
 document.getElementById("import").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let o=JSON.parse(await f.text());if(o.format!=="hbg5-26-latein-v1"||!o.history||typeof o.history!=="object")throw Error("Format");if(!confirm("Lernstand für Profil "+profile+" durch importierte Daten ersetzen?"))return;history=o.history;await write(history);start()}catch{alert("Ungültige Sicherungsdatei")}};
 }
-async function rate(yes){let x=current(),k=x.id+"|"+kind,h=history[k]||{interval:0,streak:0};let streak=yes?(h.streak||0)+1:0,days=yes?([1,3,7,14,30,60,120][Math.min(streak-1,6)]):0;history[k]={interval:days,streak,seen:Date.now(),due:new Date(Date.now()+days*86400000).toISOString(),last:yes?"known":"missed"};await write(history);if(!yes){let insertion=Math.min(queue.length,index+3);queue.splice(insertion,0,x)}index++;done++;shown=false;render()}
-(async()=>{try{db=await open()}catch{}history=await read();start();if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}})();
+async function rate(yes){let x=current(),k=x.id+"|"+kind,h=history[k]||{interval:0,streak:0};let streak=yes?(h.streak||0)+1:0,days=yes?([1,3,7,14,30,60,120][Math.min(streak-1,6)]):0;history[k]={interval:days,streak,seen:Date.now(),due:new Date(Date.now()+days*86400000).toISOString(),last:yes?"known":"missed"};await write(history);await enqueueEvent({id:crypto.randomUUID(),cardId:k,data:{correct:yes,state:history[k]},at:new Date().toISOString()});if(!yes){let insertion=Math.min(queue.length,index+3);queue.splice(insertion,0,x)}index++;done++;shown=false;render()}
+(async()=>{try{db=await open()}catch{}history=await read();start();if(sync?.enabled){flushPending().catch(()=>{});window.addEventListener('online',()=>flushPending().catch(()=>{}));}if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}})();
 })();
