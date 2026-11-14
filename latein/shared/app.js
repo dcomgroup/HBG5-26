@@ -15,12 +15,25 @@ let history={};
 let syncing=false;
 let syncAgain=false;
 const pendingKey=()=> "__pending_sync__"+profile;
-function getPending(){return new Promise(resolve=>{if(!db){resolve([]);return}const r=db.transaction(STORE,"readonly").objectStore(STORE).get(pendingKey());r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>resolve([])})}
-function putPending(events){return new Promise(resolve=>{if(!db){resolve();return}const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(events,pendingKey());tx.oncomplete=resolve;tx.onerror=resolve})}
+let pendingLock=Promise.resolve();
+function pendingTransaction(update){
+ const operation=pendingLock.then(()=>new Promise(resolve=>{
+  if(!db){resolve([]);return}
+  const tx=db.transaction(STORE,"readwrite"),store=tx.objectStore(STORE),req=store.get(pendingKey());
+  let result=[];
+  req.onsuccess=()=>{const current=Array.isArray(req.result)?req.result:[];result=update(current);if(result!==null)store.put(result,pendingKey())};
+  tx.oncomplete=()=>resolve(result);tx.onerror=()=>resolve([]);
+ }));
+ pendingLock=operation.then(()=>{},()=>{});return operation;
+}
+function getPending(){return pendingTransaction(current=>{pendingSnapshot=current;return null}).then(()=>pendingSnapshot)}
+let pendingSnapshot=[];
+async function appendPending(event){await pendingTransaction(current=>{pendingSnapshot=[...current,event];return pendingSnapshot})}
+async function drainPending(sent){await pendingTransaction(current=>{pendingSnapshot=current.filter(e=>!sent.has(e.id));return pendingSnapshot})}
 async function queueCloud(cardId,state,imported=false){
  if(!sync?.enabled)return;
  const event={id:crypto.randomUUID(),cardId,data:{state,imported},at:new Date(state.seen).toISOString()};
- const events=await getPending();await putPending([...events,event]);
+ await appendPending(event);
  syncNow().catch(()=>{});
 }
 async function syncNow(){
@@ -31,7 +44,7 @@ async function syncNow(){
   const pending=await getPending();
   const sent=new Set();
   for(const event of pending){await sync.append(event);sent.add(event.id)}
-  if(sent.size)await putPending((await getPending()).filter(e=>!sent.has(e.id)));
+  if(sent.size)await drainPending(sent);
   const remote=await sync.read();
   if(!Array.isArray(remote))throw Error("Invalid cloud response");
   const merged={...history};
