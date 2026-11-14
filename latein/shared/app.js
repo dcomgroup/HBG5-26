@@ -5,12 +5,46 @@ const DBNAME="hbg5-26-latein-v1",STORE="progress", legacy="hbg5-26-latein", keyP
 const urlProfile=new URLSearchParams(location.search).get("p");
 const fixedProfile=urlProfile&&/^[a-z0-9][a-z0-9-]{2,23}$/.test(urlProfile)?urlProfile:null;
 const demoMode=new URLSearchParams(location.search).get("demo")==="1";
+const sync=window.HBG_LATIN_SYNC;
 let db=null,profile=fixedProfile|| (demoMode?"__demo__":localStorage.getItem(keyProfile)||"MB"),mode="current",kind="translation",queue=[],index=0,again=[],shown=false,done=0;
 const all=new Map();for(const [t,arr] of Object.entries(data))for(const [latin,german,grammar] of arr){let id=latin.normalize("NFC").toLowerCase().replace(/\\s+/g," ").trim();if(!all.has(id))all.set(id,{id,latin,german,grammar,tests:[t]});else{let x=all.get(id);x.tests.push(t);if(t==="test02"&&grammar!=="Wiederholung")x.grammar=grammar;}}
 function open(){return new Promise(resolve=>{if(!("indexedDB" in window)){resolve(null);return}const r=indexedDB.open(DBNAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)})}
 async function read(){if(!db)return {};return new Promise(resolve=>{let tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).get(profile);r.onsuccess=()=>resolve(r.result||{});r.onerror=()=>resolve({})})}
 async function write(v){if(!db)return;return new Promise(resolve=>{let tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(v,profile);tx.oncomplete=resolve;tx.onerror=resolve})}
 let history={};
+let syncing=false;
+const pendingKey=()=> "__pending_sync__"+profile;
+function getPending(){return new Promise(resolve=>{if(!db){resolve([]);return}const r=db.transaction(STORE,"readonly").objectStore(STORE).get(pendingKey());r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>resolve([])})}
+function putPending(events){return new Promise(resolve=>{if(!db){resolve();return}const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(events,pendingKey());tx.oncomplete=resolve;tx.onerror=resolve})}
+async function queueCloud(cardId,state,imported=false){
+ if(!sync?.enabled)return;
+ const event={id:crypto.randomUUID(),cardId,data:{state,imported},at:new Date(state.seen).toISOString()};
+ const events=await getPending();await putPending([...events,event]);
+ syncNow().catch(()=>{});
+}
+async function syncNow(){
+ if(!sync?.enabled||syncing)return;
+ syncing=true;
+ try{
+  const pending=await getPending();
+  const sent=new Set();
+  for(const event of pending){await sync.append(event);sent.add(event.id)}
+  if(sent.size)await putPending((await getPending()).filter(e=>!sent.has(e.id)));
+  const remote=await sync.read();
+  if(!Array.isArray(remote))throw Error("Invalid cloud response");
+  const merged={...history};
+  for(const row of remote){
+   const key=row.card_id,state=row.event_data?.state;
+   if(!state||!key||!Number.isFinite(state.seen))continue;
+   const suffix=key.split("|").pop(),word=key.slice(0,key.lastIndexOf("|"));
+   if(!all.has(word)||!["translation","grammar"].includes(suffix))continue;
+   if(!merged[key]||Number(state.seen)>Number(merged[key].seen||0))merged[key]=state;
+  }
+  history=merged;await write(history);
+ }catch(e){console.warn("Cloud sync unavailable; local progress retained",e)}
+ finally{syncing=false}
+}
+
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const shuffle=a=>a.sort(()=>Math.random()-.5);
 const available=()=>[...all.values()].filter(x=>mode==="all"||x.tests.includes(test));
@@ -25,8 +59,8 @@ document.getElementById("mode").onchange=e=>{mode=e.target.value;start()};
 document.getElementById("kind").onchange=e=>{kind=e.target.value;start()};
 if(x){if(!shown)document.getElementById("reveal").onclick=()=>{shown=true;render()};else{document.getElementById("yes").onclick=()=>rate(true);document.getElementById("no").onclick=()=>rate(false)}}else document.getElementById("restart").onclick=start;
 document.getElementById("export").onclick=()=>{let blob=new Blob([JSON.stringify({format:"hbg5-26-latein-v1",profile,history,exported:new Date().toISOString()},null,2)],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="latein-lernstand-"+profile+".json";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-document.getElementById("import").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let o=JSON.parse(await f.text());if(o.format!=="hbg5-26-latein-v1"||!o.history||typeof o.history!=="object")throw Error("Format");if(!confirm("Lernstand für Profil "+profile+" durch importierte Daten ersetzen?"))return;history=o.history;await write(history);start()}catch{alert("Ungültige Sicherungsdatei")}};
+document.getElementById("import").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let o=JSON.parse(await f.text());if(o.format!=="hbg5-26-latein-v1"||!o.history||typeof o.history!=="object")throw Error("Format");if(!confirm("Lernstand für Profil "+profile+" durch importierte Daten ersetzen?"))return;history=o.history;await write(history);if(sync?.enabled){for(const [k,state] of Object.entries(history)){if(state&&Number.isFinite(state.seen))await queueCloud(k,state,true)}}start()}catch{alert("Ungültige Sicherungsdatei")}};
 }
-async function rate(yes){let x=current(),k=x.id+"|"+kind,h=history[k]||{interval:0,streak:0};let streak=yes?(h.streak||0)+1:0,days=yes?([1,3,7,14,30,60,120][Math.min(streak-1,6)]):0;history[k]={interval:days,streak,seen:Date.now(),due:new Date(Date.now()+days*86400000).toISOString(),last:yes?"known":"missed"};await write(history);if(!yes){let insertion=Math.min(queue.length,index+3);queue.splice(insertion,0,x)}index++;done++;shown=false;render()}
-(async()=>{try{db=await open()}catch{}history=await read();start();if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}})();
+async function rate(yes){let x=current(),k=x.id+"|"+kind,h=history[k]||{interval:0,streak:0};let streak=yes?(h.streak||0)+1:0,days=yes?([1,3,7,14,30,60,120][Math.min(streak-1,6)]):0;history[k]={interval:days,streak,seen:Date.now(),due:new Date(Date.now()+days*86400000).toISOString(),last:yes?"known":"missed"};await write(history);await queueCloud(k,history[k]);if(!yes){let insertion=Math.min(queue.length,index+3);queue.splice(insertion,0,x)}index++;done++;shown=false;render()}
+(async()=>{try{db=await open()}catch{}history=await read();if(sync?.enabled){await syncNow();window.addEventListener("online",()=>syncNow().catch(()=>{}));window.addEventListener("pageshow",()=>syncNow().catch(()=>{}))}start();if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}})();
 })();
