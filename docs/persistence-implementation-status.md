@@ -58,3 +58,11 @@ Branch: `feature/persistence-integration-20261115`. **Keine Freigabe für main.*
 - Chromium-Test um einen simulierten A→B→A-Synchronisationsdurchlauf in zwei getrennten Browser-Kontexten für Englisch erweitert. Dieser Test nutzt einen gemockten Supabase-Endpunkt. **Testcode committed, erfolgreiches Ausführen noch nicht bestätigt.**
 - Syntaxprüfung aller betroffenen JavaScript-Dateien einschließlich des Browser-Tests: **PASS**.
 - Weiter offen: echte browserbasierte Tests und Gerätetests, vollständige Konflikt-/Migrationsabnahme, Supabase-Limit und Missbrauchsschutz. Keine Freigabe für `main`.
+
+## Abnahmefortsetzung: Draft-PR und CI
+- Draft-Pull-Request [#1](https://github.com/dcomgroup/HBG5-26/pull/1) eröffnet. **Nicht mergebar / nicht zur Veröffentlichung freigegeben.**
+- GitHub-Actions-Workflow auf Pull Requests nach `main` erweitert und Preview-Server auf den realen Pages-Unterpfad `/HBG5-26/` korrigiert.
+- Cloud-Zugangsschlüssel werden bei direkten App-Links für spätere Besuche lokal gespeichert.
+- Nach dem jüngsten Commit meldete die GitHub-Workflow-Abfrage **keine Läufe**. Deshalb weiterhin **kein Nachweis** eines erfolgreichen Chromium-Tests; Ursache kann aus den verfügbaren Daten nicht sicher bestimmt werden.
+- Supabase-RPC-Rückgabetypen verifiziert: `append_learning_event` boolean, `read_learning_events` Tabelle, `reserve_profile` Tabelle.
+- Release bleibt gesperrt, bis Browser- und Geräteabnahme nachweislich erfolgreich sind.
