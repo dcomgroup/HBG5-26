@@ -1,10 +1,10 @@
 (function(){
 "use strict";
-const data=window.HBG_LATIN, test=document.body.dataset.test||"test02", root=document.getElementById("app");
+const data=window.HBG_LATIN, test=document.querySelector("main").dataset.test||"test02", root=document.getElementById("app");
 const DBNAME="hbg5-26-latein-v1",STORE="progress", legacy="hbg5-26-latein", keyProfile="hbg5-26-latein-profile";
 let db=null,profile=localStorage.getItem(keyProfile)||"MB",mode="current",kind="translation",queue=[],index=0,again=[],shown=false,done=0;
 const all=new Map();for(const [t,arr] of Object.entries(data))for(const [latin,german,grammar] of arr){let id=latin.normalize("NFC").toLowerCase().replace(/\\s+/g," ").trim();if(!all.has(id))all.set(id,{id,latin,german,grammar,tests:[t]});else{let x=all.get(id);x.tests.push(t);if(t==="test02"&&grammar!=="Wiederholung")x.grammar=grammar;}}
-function open(){return new Promise(resolve=>{if(!indexedDB){resolve(null);return}const r=indexedDB.open(DBNAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)})}
+function open(){return new Promise(resolve=>{if(!("indexedDB" in window)){resolve(null);return}const r=indexedDB.open(DBNAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)})}
 async function read(){if(!db)return {};return new Promise(resolve=>{let tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).get(profile);r.onsuccess=()=>resolve(r.result||{});r.onerror=()=>resolve({})})}
 async function write(v){if(!db)return;return new Promise(resolve=>{let tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(v,profile);tx.oncomplete=resolve;tx.onerror=resolve})}
 let history={};
@@ -23,5 +23,5 @@ document.getElementById("export").onclick=()=>{let blob=new Blob([JSON.stringify
 document.getElementById("import").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let o=JSON.parse(await f.text());if(o.format!=="hbg5-26-latein-v1"||!o.history||typeof o.history!=="object")throw Error("Format");if(!confirm("Lernstand für Profil "+profile+" durch importierte Daten ersetzen?"))return;history=o.history;await write(history);start()}catch{alert("Ungültige Sicherungsdatei")}};
 }
 async function rate(yes){let x=current(),k=x.id+"|"+kind,h=history[k]||{interval:0,streak:0};let streak=yes?(h.streak||0)+1:0,days=yes?([1,3,7,14,30,60,120][Math.min(streak-1,6)]):0;history[k]={interval:days,streak,seen:Date.now(),due:new Date(Date.now()+days*86400000).toISOString(),last:yes?"known":"missed"};await write(history);if(!yes){let insertion=Math.min(queue.length,index+3);queue.splice(insertion,0,x)}index++;done++;shown=false;render()}
-(async()=>{try{db=await open()}catch{}history=await read();if(navigator.storage&&navigator.storage.persist){try{await navigator.storage.persist()}catch{}}start()})();
+(async()=>{try{db=await open()}catch{}history=await read();start();if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}})();
 })();
