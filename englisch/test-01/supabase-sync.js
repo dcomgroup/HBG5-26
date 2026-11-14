@@ -2,6 +2,7 @@
 const slug=new URLSearchParams(location.search).get("p");
 const match=location.hash.match(/sync=([0-9a-f]{64})/);
 const secret=match?.[1]||localStorage.getItem("hbg5-26-cloud-secret:"+slug);
+if(slug&&/^[0-9a-f]{64}$/.test(secret||""))localStorage.setItem("hbg5-26-cloud-secret:"+slug,secret);
 const enabled=!!(slug&&/^[a-z0-9][a-z0-9-]{2,63}$/.test(slug)&&/^[0-9a-f]{64}$/.test(secret||""));
 const url="https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/";
 const key="sb_publishable_PupDfjNg0FdAGU6yJsxeBg_kGYhgMAS";
