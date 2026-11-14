@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="de"><head><meta charset="utf-8"><base href="/HBG5-26/"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HBG5-26 Lernapps</title>
 <style>
 :root{font-family:system-ui,-apple-system,sans-serif;color:#172235;background:#f6f8fc}
@@ -12,8 +12,9 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 .track-label{font-size:.76rem;color:#7b8795;margin-top:5px}.done .track{display:none}.done .track-label{display:none}
 .done{background:#f0f1f3;border-color:#e0e3e8;box-shadow:none}.done a{color:#667386}.done .meta{color:#78828c}
 .upcoming{margin:20px 0 28px}.upcoming h2{margin-bottom:10px}.upcoming-list{background:#fff;border:1px solid #e4e9f1;border-radius:15px;padding:4px 16px}.upcoming-item{padding:12px 0;border-bottom:1px solid #edf0f4}.upcoming-item:last-child{border-bottom:0}.upcoming-item a{color:#2458b8;font-weight:650;text-decoration:none}.upcoming-item .meta{margin-top:3px}
+.profile-box{background:#fff;border:1px solid #dfe5ee;border-radius:16px;padding:18px;margin:18px 0}.profile-box input,.profile-box button{font:inherit;padding:10px;border-radius:9px;border:1px solid #b9c5d6}.profile-box button{background:#2458b8;color:white;cursor:pointer}.profile-box .hint{font-size:.85rem;color:#627084}.profile-box .error{color:#ad2525}.profile-box code{overflow-wrap:anywhere}
 </style></head><body>
-<header><h1>HBG5-26</h1><p>Lernapps für das Schuljahr 2026/27</p></header>
+<header><h1>HBG5-26</h1><p>Lernapps für das Schuljahr 2026/27</p></header><div class="profile-box" id="profile-box"></div>
 <nav class="upcoming" aria-label="Nächste Prüfungen"><h2>Als Nächstes dran</h2><div class="upcoming-list" id="upcoming-list"></div></nav>
 <section><h2>Mathe</h2><article class="exam" data-date="2026-11-16" data-tentative="1"><a href="mathe/test-01/">Test 01: Geometrie</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
 <section><h2>Deutsch</h2><article class="exam" data-date="2026-11-16"><a href="deutsch/test-01/">Test 01: Nomen, Kasus, Pronomen und Adjektive</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
@@ -22,6 +23,46 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 <article class="exam" data-date="2026-11-19"><a href="latein/test-02/">Test 02: Lektion 3 · Auf dem Land</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
 <section><h2>Englisch</h2><article class="exam" data-date="2026-11-20"><a href="englisch/test-01/">Test 01: Theme 1 · New in Camden</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
 <script>
+
+// Profiles are local until a remote sync backend is connected.
+const PROFILE_KEY="hbg5-26-active-profile";
+const prefix="/HBG5-26/";
+const params=new URLSearchParams(location.search);
+const rawPath=decodeURIComponent(location.pathname.startsWith(prefix)?location.pathname.slice(prefix.length):"").replace(/\\/$/,"");
+const validSlug=v=>/^[a-z0-9][a-z0-9-]{2,23}$/.test(v);
+const fromLink=params.get("p")||rawPath;
+let activeProfile=validSlug(fromLink)?fromLink:null;
+const box=document.getElementById("profile-box");
+function profileLinks(){
+ document.querySelectorAll(".exam a").forEach(a=>{
+ const url=new URL(a.getAttribute("href"),document.baseURI);
+ if(activeProfile)url.searchParams.set("p",activeProfile);
+ else url.searchParams.set("demo","1");
+ a.href=url.href;
+ });
+}
+function showProfile(){
+ if(activeProfile){
+  localStorage.setItem(PROFILE_KEY,activeProfile);
+  box.innerHTML='<strong>Dein Lernprofil: '+activeProfile+'</strong><p class="hint">Dieser Link öffnet dein Profil auf diesem Gerät. Eine geräteübergreifende Synchronisation ist noch nicht eingerichtet.</p><p><button id="switch-profile">Anderes Profil anlegen</button> <button id="demo-profile">Testversion öffnen</button></p>';
+  document.getElementById("switch-profile").onclick=()=>{activeProfile=null;showProfile()};
+  document.getElementById("demo-profile").onclick=()=>{location.href=prefix};
+ }else{
+  box.innerHTML='<strong>Testversion</strong><p class="hint">Hier kannst du die Lernapps ausprobieren. Die Lernstände bleiben auf diesem Gerät.</p><h2>Eigenes Lernprofil anlegen</h2><p class="hint">Wähle einen Namen für deinen persönlichen Lernlink, zum Beispiel squirrel26, salve123 oder tiger2026.</p><input id="profile-name" maxlength="24" placeholder="Dein Wunschname" aria-label="Dein Wunschname"> <button id="create-profile">Profil anlegen</button><p class="error" id="profile-error" role="alert"></p>';
+  document.getElementById("create-profile").onclick=()=>{
+   const v=document.getElementById("profile-name").value.trim().toLowerCase().replace(/\\s+/g,"-");
+   if(!validSlug(v)){document.getElementById("profile-error").textContent="Bitte 3 bis 24 Zeichen verwenden: Buchstaben a-z, Zahlen oder Bindestriche.";return}
+   activeProfile=v;history.replaceState(null,"",prefix+encodeURIComponent(v));
+   showProfile();profileLinks();
+   box.insertAdjacentHTML("beforeend",'<p><strong>Profil angelegt.</strong> Bitte deine Eltern, diesen Link als Lesezeichen zu speichern:</p><p><code id="profile-link"></code></p><button id="copy-profile">Link kopieren</button>');
+   document.getElementById("profile-link").textContent=location.href;
+   document.getElementById("copy-profile").onclick=()=>navigator.clipboard?.writeText(location.href);
+  };
+ }
+ profileLinks();
+}
+showProfile();
+
 const dayMs=86400000,weekday=['So','Mo','Di','Mi','Do','Fr','Sa'];
 function utcDay(y,m,d){return Date.UTC(y,m-1,d)/dayMs}
 function updateDates(){
