@@ -43,7 +43,7 @@ async function syncMath(){
   if(row.card_id==="__totals__"){p.rounds=Math.max(p.rounds||0,v.rounds||0);p.answers=Math.max(p.answers||0,v.answers||0)}
   else if(/^\d+$/.test(row.card_id)){p.cards[row.card_id]=v}
   else return;
-  db.profiles[name]=p;stamps[row.card_id]=stamp;changed=true;
+  db.profiles[name]=p;mathSnapshot[row.card_id]=JSON.stringify(v);stamps[row.card_id]=stamp;changed=true;
  });
  if(changed){localStorage.setItem(K,JSON.stringify(db));localStorage.setItem(mathStampKey+name,JSON.stringify(stamps))}
 }
