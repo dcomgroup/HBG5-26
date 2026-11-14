@@ -49,3 +49,12 @@ Branch: `feature/persistence-integration-20261115`. **Keine Freigabe für main.*
 - Supabase-RPC `read_learning_events` geprüft: derzeit hartes Limit von 10.000 Ereignissen pro Profil und Fach. Für Langzeitbetrieb ist Paginierung oder eine serverseitige Zustandsprojektion erforderlich.
 - CI-Lauf des Browser-Workflows ist über die verfügbaren GitHub-Tools noch nicht als erfolgreich nachgewiesen. Keine Browser- oder Zwei-Geräte-Abnahme behaupten.
 - Keine Veröffentlichung auf `main`.
+
+## Fortsetzung: Code-Audit und Testabdeckung
+- **Kritischer Integrationsfehler behoben:** Mathe lud `shared/cloud-rpc.js` bisher nicht. Die Einbindung ist jetzt vorhanden.
+- Latein: IndexedDB-Outbox-Operationen serialisiert, um verlorene parallele Kartenbewertungen beim gleichzeitigen Schreiben und Bestätigen zu verhindern.
+- Mathe: Cloud-Zustände werden nach Abruf als synchronisiert markiert, damit sie beim nächsten lokalen Speichern nicht als neue Ereignisse hochgeladen werden.
+- Englisch: Cloud-Zeitstempel werden bereits beim lokalen Enqueue gespeichert, um Überschreibungen durch ältere Remote-Daten zu vermeiden.
+- Chromium-Test um einen simulierten A→B→A-Synchronisationsdurchlauf in zwei getrennten Browser-Kontexten für Englisch erweitert. Dieser Test nutzt einen gemockten Supabase-Endpunkt. **Testcode committed, erfolgreiches Ausführen noch nicht bestätigt.**
+- Syntaxprüfung aller betroffenen JavaScript-Dateien einschließlich des Browser-Tests: **PASS**.
+- Weiter offen: echte browserbasierte Tests und Gerätetests, vollständige Konflikt-/Migrationsabnahme, Supabase-Limit und Missbrauchsschutz. Keine Freigabe für `main`.
