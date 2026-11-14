@@ -42,3 +42,10 @@ Branch: `feature/persistence-integration-20261115`. **Keine Freigabe für main.*
 - Chromium-Smoke-Test für Startseite und sechs App-Routen als `tests/browser-smoke.cjs` hinzugefügt.
 - GitHub Actions Workflow `.github/workflows/persistence-smoke.yml` hinzugefügt. **Ein erfolgreicher CI-Lauf ist noch nicht verifiziert.**
 - Die tatsächliche Zwei-Geräte-Synchronisierung und vollständige Migrations-/Konfliktabnahme bleiben offen. Kein Merge.
+
+## Weitere Korrekturen (15.11.2026)
+- Latein: Der gespeicherte Cloud-Zugangsschlüssel wird jetzt auch bei späteren Aufrufen ohne URL-Fragment wiederverwendet.
+- Deutsch: Antwortprotokolle werden als einzelne, eindeutig identifizierte Cloud-Ereignisse gespeichert, beim Lesen anhand der Ereignis-ID zusammengeführt und bei der ersten Migration aus dem lokalen Protokoll übernommen.
+- Supabase-RPC `read_learning_events` geprüft: derzeit hartes Limit von 10.000 Ereignissen pro Profil und Fach. Für Langzeitbetrieb ist Paginierung oder eine serverseitige Zustandsprojektion erforderlich.
+- CI-Lauf des Browser-Workflows ist über die verfügbaren GitHub-Tools noch nicht als erfolgreich nachgewiesen. Keine Browser- oder Zwei-Geräte-Abnahme behaupten.
+- Keine Veröffentlichung auf `main`.
