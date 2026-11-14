@@ -10,8 +10,11 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 .meta{font-size:.85rem;color:#637084;margin-top:6px}.done .meta{color:#337c51}
 .track{height:7px;background:#e9edf3;border-radius:9px;margin-top:13px;overflow:hidden}.fill{height:100%;background:#5288dc;width:0%;transition:width .3s}
 .track-label{font-size:.76rem;color:#7b8795;margin-top:5px}.done .track{display:none}.done .track-label{display:none}
+.done{background:#f0f1f3;border-color:#e0e3e8;box-shadow:none}.done a{color:#667386}.done .meta{color:#78828c}
+.upcoming{margin:20px 0 28px}.upcoming h2{margin-bottom:10px}.upcoming-list{background:#fff;border:1px solid #e4e9f1;border-radius:15px;padding:4px 16px}.upcoming-item{padding:12px 0;border-bottom:1px solid #edf0f4}.upcoming-item:last-child{border-bottom:0}.upcoming-item a{color:#2458b8;font-weight:650;text-decoration:none}.upcoming-item .meta{margin-top:3px}
 </style></head><body>
 <header><h1>HBG5-26</h1><p>Lernapps für das Schuljahr 2026/27</p></header>
+<nav class="upcoming" aria-label="Nächste Prüfungen"><h2>Als Nächstes dran</h2><div class="upcoming-list" id="upcoming-list"></div></nav>
 <section><h2>Mathe</h2><article class="exam" data-date="2026-11-16" data-tentative="1"><a href="mathe/test-01/">Test 01: Geometrie</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
 <section><h2>Deutsch</h2><article class="exam" data-date="2026-11-16"><a href="deutsch/test-01/">Test 01: Nomen, Kasus, Pronomen und Adjektive</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
 <section><h2>Biologie</h2><article class="exam" data-date="2026-11-11"><a href="biologie/klassenarbeit-01/">Klassenarbeit 01: Sinnesorgane (52 Bildkarten)</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt im jeweiligen Lernprofil</div></article></section>
@@ -35,6 +38,42 @@ if(delta<0)card.classList.add('done');
 });
 }
 updateDates();
+function orderExams(){
+ const sections=[...document.querySelectorAll('body > section')];
+ const todayParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const part=k=>Number(todayParts.find(p=>p.type===k).value);
+ const today=utcDay(part('year'),part('month'),part('day'));
+ const dateValue=card=>{const [y,m,d]=card.dataset.date.split('-').map(Number);return utcDay(y,m,d)};
+ const compare=(a,b)=>dateValue(a)-dateValue(b)||(Number(!!a.dataset.tentative)-Number(!!b.dataset.tentative));
+ sections.forEach(section=>{
+  [...section.querySelectorAll('.exam')].sort((a,b)=>{
+   const aPast=dateValue(a)<today,bPast=dateValue(b)<today;
+   return aPast!==bPast?(aPast?1:-1):compare(a,b);
+  }).forEach(card=>section.appendChild(card));
+ });
+ sections.sort((a,b)=>{
+  const next=section=>[...section.querySelectorAll('.exam')].map(dateValue).filter(d=>d>=today).sort((x,y)=>x-y)[0]??Infinity;
+  const x=next(a),y=next(b);
+  if(x!==y)return x-y;
+  if(x===Infinity){
+   const latest=section=>Math.max(...[...section.querySelectorAll('.exam')].map(dateValue));
+   return latest(b)-latest(a);
+  }
+  return 0;
+ }).forEach(section=>document.body.insertBefore(section,document.querySelector('script')));
+ const upcoming=[...document.querySelectorAll('.exam')].filter(c=>dateValue(c)>=today).sort(compare);
+ const list=document.getElementById('upcoming-list');
+ list.replaceChildren();
+ if(!upcoming.length){list.textContent='Keine bevorstehenden Prüfungen eingetragen.';return}
+ upcoming.forEach(card=>{
+  const item=document.createElement('div');item.className='upcoming-item';
+  const link=card.querySelector('a').cloneNode(true);
+  const subject=card.closest('section').querySelector('h2').textContent;
+  link.textContent=subject+' · '+link.textContent;
+  const meta=card.querySelector('.meta').cloneNode(true);
+  item.append(link,meta);list.appendChild(item);
+ });
+}
 const safeParse=k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}};
 const percent=(n,total)=>total>0?Math.round(100*n/total):null;
 function show(card,value,description){
@@ -78,5 +117,6 @@ function progress(){
  });
 }
 progress();
+orderExams();
 window.addEventListener('pageshow',()=>progress());
 </script></body></html>
