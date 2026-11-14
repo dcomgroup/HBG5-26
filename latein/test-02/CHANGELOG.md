@@ -1,0 +1,1 @@
+# Changelog\n\n- v1.0.0 (2026-11-14): Lektion 3 inklusive Wiederholungen, zwei Übungsmodi, Spaced Repetition, IndexedDB und JSON-Backup.\n
