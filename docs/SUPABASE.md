@@ -53,3 +53,5 @@ Kostenlos starten. Ein täglicher GitHub-Actions-Keep-alive ist nur eine geplant
 - Öffentliches EXECUTE für `rls_auto_enable()` entzogen und geprüft.
 - Sicherheitsadvisor meldet die drei bewusst anonym erreichbaren SECURITY-DEFINER-RPCs; deren Geheimnisprüfung und Missbrauchsschutz sind vor Produktivfreigabe separat zu testen. RLS-ohne-Policy ist bei gesperrten Tabellen beabsichtigt.
 - Noch nicht freigegeben: Browserintegration, Profilisolation/Fehlerschlüsseltests, Synchronisationskonflikte, Migration, Rate-Limits, Pagination über 10.000 Ereignisse.
+
+- Ergänzender SQL-Test erfolgreich: falsches Profilgeheimnis für Lesen und Schreiben abgewiesen; Profile A/B isoliert; doppelte Event-ID erzeugt nur einen Eintrag. Testtransaktion zurückgerollt. Wiederholbarer Test: `supabase/tests/profile_isolation.sql`.
