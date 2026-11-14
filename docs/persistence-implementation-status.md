@@ -78,3 +78,10 @@ Branch: `feature/persistence-integration-20261115`. **Keine Freigabe für main.*
 - Supabase SQL-Test mit `set local role anon` in zurückgerollter Transaktion erfolgreich: Profil reserviert, Ereignis angehängt, mit korrektem Token wieder gelesen; identische UUID zweimal angehängt und genau ein Ereignis gelesen; falsches Token bei `read_learning_events` abgewiesen.
 - Diese Datenbanktests verwenden eine SQL-Transaktion mit `rollback`; keine dauerhaften Testprofile oder Ereignisse erzeugt.
 - **Nicht durch diesen Test bewiesen:** Browser-zu-echter-Supabase-Verbindung über HTTPS/CORS und echte zwei Geräte. Der Playwright-Zwei-Kontext-Test verwendet einen simulierten RPC-Endpunkt.
+
+## Echte Browser-zu-Supabase-Abnahme, 15.11.2026
+- CI-Lauf **#44**, `Persistence smoke`: **success**. Enthält `node tests/browser-smoke.cjs` und `node tests/live-supabase.cjs`, beide erfolgreich. Zusätzlich `Lernapps smoke checks` Run #31 erfolgreich.
+- Der Live-Test verwendet ein zufälliges separates QA-Profil in der echten Supabase-Datenbank, öffnet die bestehende Startseite mit Profil und folgt dem regulären Englisch-Testlink. Danach werden Bewertungen von Browserkontext A nach B und zurück über echte HTTPS-RPCs übertragen.
+- Browserkontext ohne Zugangsschlüssel erhält keine fremden Karten; direkte Leseanfrage mit ungültigem Token wird abgewiesen.
+- Der simulierte Offline-Test und der echte Supabase-Test sind getrennte Prüfungen. **Ein echter Mobilgerätetest und ein kombinierter realer Offline-zu-Cloud-Test sind damit noch nicht nachgewiesen.**
+- Keine Änderungen an `main`, kein Live-Deployment. Abnahme laut Appendix Abschnitt 6 bleibt bis zum realen Mobiltest und vollständigen Migrations-/SRS-Nachweis offen.
