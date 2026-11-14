@@ -42,13 +42,13 @@
  rate=function(r){
   const id=active.id;
   // Preserve the existing interval algorithm and storage schema.
-  oldRate(r);
-  const s=state();
-  if(s[id]){s[id].lastRating=r;store(s);}
   if(inRound){
    answered++;
    if(r<=2 && !missed.includes(id))missed.push(id);
   }
+  oldRate(r);
+  const s=state();
+  if(s[id]){s[id].lastRating=r;s[id].updated=Date.now();store(s);}
  };
  panel.querySelector('#bio-new-round').onclick=startRound;
  const previousGroup=$('group').onchange;
