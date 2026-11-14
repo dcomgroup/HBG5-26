@@ -1,22 +1,37 @@
-# Supabase-Persistenz: technischer Arbeitsstand (15.11.2026)
+# Supabase-Persistenz: Arbeitsstand 15.11.2026
 
-Branch: `feature/persistence-integration-20261115`. Keine Freigabe für `main`.
+Branch: `feature/persistence-integration-20261115`. **Keine Freigabe für main.**
 
-## Implementiert auf diesem Branch
-- Bestehende Startseite reserviert neue Profilnamen über `reserve_profile`; 256-Bit-Zugangsschlüssel wird im URL-Fragment und lokal gespeichert und an App-Links weitergegeben. Vorhandene lokale Profile bleiben lokal, solange keine sichere Migration vorliegt.
-- Bestehende produktive Latein-Apps laden einen optionalen Supabase-RPC-Adapter. Das vorhandene UI bleibt unverändert.
-- Latein-Bewertungen werden lokal in IndexedDB gespeichert und in einer lokalen Ereignis-Warteschlange für den Upload gehalten. Beim Laden werden Cloud-Ereignisse abgerufen und Kartenstände nach `seen` zusammengeführt. Offline-Ereignisse bleiben für später erhalten.
-- SQL-Tests mit `anon`: Profilreservierung, Append, Lesen und Profiltrennung; Wiederholung derselben Event-ID ergibt genau ein Ereignis. Tests wurden in Transaktionen zurückgerollt.
-- Syntaxprüfung der geänderten JS-Dateien bestanden.
+## Auf dem Branch implementiert
+- Startseite: Supabase-Reservierung neuer Profilnamen, zufälliges 256-Bit-Geheimnis im URL-Fragment, Weitergabe an vorhandene App-Links.
+- Latein Test 01/02: gemeinsamer IndexedDB-Lernstand, Offline-Ereigniswarteschlange, Cloud-Abgleich, einmalige lokale Migration.
+- Englisch Test 01: Kartenbewertungen mit lokalem Outbox- und Cloud-Abgleich.
+- Biologie Klassenarbeit 01: Bewertungen mit lokalem Outbox- und Cloud-Abgleich.
+- Mathe Test 01: Kartenstände und Rundenstatistik mit lokalem Outbox- und Cloud-Abgleich.
+- Deutsch Test 01: Kartenstände mit lokalem Outbox- und Cloud-Abgleich.
+- Vorhandene App-Oberflächen wurden nicht bewusst neu gestaltet; bestehende lokale Speicherkeys bleiben erhalten.
 
-## Offen / nicht abgenommen
-1. Mathe, Deutsch, Englisch und Biologie verwenden unterschiedliche lokale Datenmodelle und haben noch keine Supabase-Anbindung.
-2. Sichere, verlustfreie Migration bestehender lokaler Profile und historischer Daten fehlt.
-3. Browser-/Mobil-End-to-End-Tests und Offline-Tests auf zwei Geräten fehlen.
-4. Konfliktbehandlung bei zeitgleichen Bearbeitungen ist noch nicht ausreichend nachgewiesen. Latein verwendet derzeit die lokale `seen`-Zeit.
-5. Sicherheitswarnungen für drei öffentlich aufrufbare SECURITY DEFINER RPCs müssen vor Freigabe geprüft und hinsichtlich Missbrauch/Ratenbegrenzung abgesichert werden.
-6. Die vorhandene Startseite ist auf dem Branch für neue Cloud-Profile angepasst; die tatsächliche Darstellung und Navigation sind noch nicht im Browser geprüft.
-7. Abnahmekriterien 1 bis 7 des verbindlichen Appendix sind daher **nicht vollständig erfüllt**.
+## Nachgewiesene technische Tests
+- Supabase unter `anon`: Profilreservierung, Lesen/Schreiben, getrennte Profile, falsches Geheimnis blockiert Lesen und Schreiben. **PASS**
+- Gleiche Event-UUID mehrfach angehängt: genau ein gespeichertes Ereignis. **PASS**
+- JavaScript-Syntaxprüfungen der geänderten App-Dateien. **PASS**
 
-## Release-Gate
-**Kein Merge nach main**, bevor alle Kriterien geprüft sind. Die produktive Seite bleibt unverändert.
+## Offene Abnahme / Risiken
+1. Noch keine realen Browser-/Mobiltests auf zwei Geräten. Geräteübergreifende Synchronisation und Offline-Neustart sind daher nicht abgenommen.
+2. Konfliktregeln sind derzeit app-spezifisch und überwiegend zeitstempelbasiert. Reale gleichzeitige Änderungen und Import-/Export-Migrationen sind nicht ausreichend getestet.
+3. Bestehende Profile ohne Supabase-Geheimnis werden nicht automatisch einem Cloud-Profil zugeordnet. Eine stille Zuordnung wäre unsicher.
+4. Deutsch: bestehende Lernprotokolle (`log`) werden nicht vollständig in die Cloud übernommen. Mathe-Rundenzähler können bei paralleler Nutzung nicht zuverlässig additiv zusammengeführt werden.
+5. Öffentliche Profilregistrierung braucht Missbrauchsschutz/Ratenbegrenzung; SECURITY DEFINER-Warnungen sind zu prüfen.
+6. Keine nachgewiesene Browserregression für Startseite „Als Nächstes dran“, Navigation und die Apps.
+7. Kein Deployment auf `main`, daher keine Live-URL-Abnahme.
+
+## Sieben Abnahmekriterien des Supabase-Appendix
+1. Startseite/Apps unverändert: **offen (Browserprüfung)**
+2. A → B: **offen (Gerätetest)**
+3. B → A und Profiltrennung: **teilweise (Datenbank-Isolation PASS, Gerätetest offen)**
+4. Offline, Neustart, Duplikate: **teilweise (SQL-Duplikattest PASS, Offline-Browsertest offen)**
+5. Lernmechaniken, Latein-Testverbund, Export/Import: **offen (Regressionstest)**
+6. Lokale Daten, Migration, Wiederherstellung: **teilweise implementiert, nicht abgenommen**
+7. Automatisierte und reale Tests, Security, Deployment: **offen**
+
+**Release-Gate: Nicht mergen, solange die sieben Kriterien nicht nachweislich erfüllt sind.**
