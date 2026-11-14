@@ -35,3 +35,10 @@ Branch: `feature/persistence-integration-20261115`. **Keine Freigabe für main.*
 7. Automatisierte und reale Tests, Security, Deployment: **offen**
 
 **Release-Gate: Nicht mergen, solange die sieben Kriterien nicht nachweislich erfüllt sind.**
+
+## Weitere Arbeiten 15.11.2026
+- Race-Condition-Fix im gemeinsamen Cloud-Transport: Neue Uploads während einer laufenden Synchronisierung lösen anschließend einen weiteren Durchlauf aus.
+- Entsprechende Korrektur in Englisch.
+- Chromium-Smoke-Test für Startseite und sechs App-Routen als `tests/browser-smoke.cjs` hinzugefügt.
+- GitHub Actions Workflow `.github/workflows/persistence-smoke.yml` hinzugefügt. **Ein erfolgreicher CI-Lauf ist noch nicht verifiziert.**
+- Die tatsächliche Zwei-Geräte-Synchronisierung und vollständige Migrations-/Konfliktabnahme bleiben offen. Kein Merge.
