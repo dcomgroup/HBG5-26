@@ -8,7 +8,7 @@ const slug='migration-qa',secret='d'.repeat(64);
   const context=await browser.newContext();
   const events=[];
   await context.route('https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/**',async route=>{
-   const name=route.request().url.split('/').pop(),body=route.request().postDataJSON();
+   const name=route.request().url().split('/').pop(),body=route.request().postDataJSON();
    if(body.p_slug!==slug||body.p_secret!==secret){await route.fulfill({status:403,body:'{}'});return}
    if(name==='append_learning_event'){
     if(!events.some(e=>e.event_id===body.p_event_id))events.push({event_id:body.p_event_id,card_id:body.p_card_id,event_data:body.p_event_data,occurred_at:body.p_occurred_at});
