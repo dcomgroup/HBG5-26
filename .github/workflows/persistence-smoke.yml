@@ -2,6 +2,8 @@ name: Persistence smoke
 on:
   push:
     branches: [feature/persistence-integration-20261115]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
   smoke:
