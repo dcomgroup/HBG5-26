@@ -66,3 +66,9 @@ Branch: `feature/persistence-integration-20261115`. **Keine Freigabe für main.*
 - Nach dem jüngsten Commit meldete die GitHub-Workflow-Abfrage **keine Läufe**. Deshalb weiterhin **kein Nachweis** eines erfolgreichen Chromium-Tests; Ursache kann aus den verfügbaren Daten nicht sicher bestimmt werden.
 - Supabase-RPC-Rückgabetypen verifiziert: `append_learning_event` boolean, `read_learning_events` Tabelle, `reserve_profile` Tabelle.
 - Release bleibt gesperrt, bis Browser- und Geräteabnahme nachweislich erfolgreich sind.
+
+## Automatisierte Tests: Stand 15.11.2026
+- GitHub Actions nach Umstellung auf Ubuntu 24.04 laut Nutzer-Screenshot erfolgreich: Workflow #25 (Push) und #26 (Pull Request), jeweils grün.
+- Anschließend weitere Codeänderung: Englisch setzt den `syncAgain`-Retry bei laufender Synchronisierung korrekt und persistiert den lokalen Cloud-Zeitstempel beim Queueing.
+- Playwright-Test ergänzt: simulierte Offline-Antwort, Prüfung der lokalen Outbox, erneuter Upload beim `online`-Event und keine doppelten Event-IDs. **Für diese neuen Assertions liegt noch kein bestätigter CI-Erfolg vor.**
+- Serverseitige RPC `append_learning_event` geprüft: Tokenhash-Prüfung, Payload-Limit 16 KB, UUID-idempotenter Insert. Offene Langzeitthemen: 10.000er Leselimit und Replay/gleichzeitige Offline-Änderungen.
