@@ -14,7 +14,7 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 <header><h1>HBG5-26</h1><p>Lernapps für das Schuljahr 2026/27</p></header>
 <section><h2>Mathe</h2><article class="exam" data-date="2026-11-16" data-tentative="1"><a href="mathe/test-01/">Test 01: Geometrie</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
 <section><h2>Deutsch</h2><article class="exam" data-date="2026-11-16"><a href="deutsch/test-01/">Test 01: Nomen, Kasus, Pronomen und Adjektive</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
-<section><h2>Biologie</h2><article class="exam" data-date="2026-11-10"><a href="biologie/klassenarbeit-01/">Klassenarbeit 01: Sinnesorgane (52 Bildkarten)</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt im jeweiligen Lernprofil</div></article></section>
+<section><h2>Biologie</h2><article class="exam" data-date="2026-11-11"><a href="biologie/klassenarbeit-01/">Klassenarbeit 01: Sinnesorgane (52 Bildkarten)</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt im jeweiligen Lernprofil</div></article></section>
 <section><h2>Latein</h2><article class="exam" data-date="2026-11-10"><a href="latein/test-01/">Test 01: Salve und Lektion 1</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article>
 <article class="exam" data-date="2026-11-19"><a href="latein/test-02/">Test 02: Lektion 3 · Auf dem Land</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
 <section><h2>Englisch</h2><article class="exam" data-date="2026-11-20"><a href="englisch/test-01/">Test 01: Theme 1 · New in Camden</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
@@ -49,8 +49,12 @@ function progress(){
  show(cards[0],ms?percent(Object.values(ms.cards||{}).filter(s=>s.level>=3).length,33):null,'sichere Aufgabentypen · '+(mn||'kein Profil'));
  const de=safeParse('hbg5-26:deutsch:test-01:profiles-v1'),dp=de?.profiles?.[de.active],ds=dp?.stats;
  show(cards[1],ds?percent(Object.values(ds).filter(s=>s.streak>=2).length,90):null,'Aufgaben mindestens zweimal in Folge richtig · '+(dp?.profile||''));
+ const bioProfile=localStorage.getItem('hbg5-26-bio-ka01-profile-v1')||'Kind 1';
+ const bio=safeParse('hbg5-26-bio-ka01-learn-v1-'+bioProfile);
+ if(bio){const values=Object.values(bio);show(cards[2],percent(values.filter(v=>(v.reps||0)>=2).length,52),'Bildkarten mindestens zweimal gut oder einfach · '+bioProfile)}
+ else show(cards[2],null,'Noch kein Lernstand · '+bioProfile);
  const en=safeParse('hbg5-26-englisch-vocab'),ep=en?.profiles||{},enName=Object.keys(ep)[0],es=ep[enName]?.cards;
- show(cards[4],es?percent(Object.values(es).filter(s=>s.streak>=2).length,48):null,'Vokabeln mindestens zweimal in Folge richtig · '+enName);
+ show(cards[5],es?percent(Object.values(es).filter(s=>s.streak>=2).length,48):null,'Vokabeln mindestens zweimal in Folge richtig · '+enName);
  return Promise.resolve().then(()=>new Promise(resolve=>{
   if(!('indexedDB' in window)){resolve(null);return}
   const request=indexedDB.open('hbg5-26-latein-v1');
@@ -62,14 +66,14 @@ function progress(){
    get.onsuccess=()=>{db.close();resolve(get.result||{})};get.onerror=()=>{db.close();resolve(null)};
   };
  })).then(hist=>{
-   if(!hist){show(cards[2],null,'Noch kein Lernstand');show(cards[3],null,'Noch kein Lernstand');return}
+   if(!hist){show(cards[3],null,'Noch kein Lernstand');show(cards[4],null,'Noch kein Lernstand');return}
    const tests=[
     ['parentēs','peristȳlium','officium','explēre','Salvēte!','dīcere','statim','incipere','cūr?','semper','labor','placēre','pergere','esse','clāmāre','venīre','labōrāre','lūdere','cantāre','gaudēre','currere','exspectāre','audīre','rogāre','quaerere','vidēre','intrāre','rīdēre','tenēre','amīcus','amīca','magister','magistra','puer','puella','dominus','domina','servus','serva'],
     ['quid?','exspectāre','ubi?','equus','ego / mē; tū / tē; nōs / nōs; vōs / vōs','lepus','canis','dēlectāre','bōs','alere','paulō post','villa','salūtāre','iam','eum / eam; eōs / eās','uxor','cēna','parāre','adiuvāre','in','īre','īnstruere','quō?','ad','bene','caedere','servāre','certē','hortus','esse','igitur']
    ];
    tests.forEach((words,i)=>{
     const learned=words.filter(word=>{const id=word.normalize('NFC').toLowerCase().trim();return (hist[id+'|translation']?.streak||0)>=2}).length;
-    show(cards[2+i],percent(learned,words.length),'Vokabeln zweimal in Folge gewusst');
+    show(cards[3+i],percent(learned,words.length),'Vokabeln zweimal in Folge gewusst');
    });
  });
 }
