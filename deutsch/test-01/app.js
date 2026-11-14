@@ -36,7 +36,28 @@ if(!Object.keys(profiles).length){
 if(!active||!profiles[active])active=Object.keys(profiles)[0]||"";
 let data=active?profiles[active]:blank("");
 function persist(){if(active)profiles[active]=data;localStorage.setItem(STORAGE,JSON.stringify({active,profiles}))}
-function switchProfile(name){const id=key(name);if(!profiles[id])return;active=id;data=profiles[id];persist();phase="home";render()}
+const deutschCloud=window.HBG_CLOUD?.create("deutsch");
+const deutschStampKey="hbg5-26-deutsch-cloud-stamps:";
+function deutschStamps(){try{return JSON.parse(localStorage.getItem(deutschStampKey+active)||"{}")}catch{return {}}}
+async function syncDeutsch(){
+ if(!deutschCloud?.enabled||active!==deutschCloud.slug)return;
+ const stamps=deutschStamps();let changed=false;
+ await deutschCloud.sync(row=>{
+  const stamp=Date.parse(row.occurred_at),v=row.event_data?.state;
+  if(!v||!Number.isFinite(stamp)||stamp<=Number(stamps[row.card_id]||0))return;
+  if(!/^\d+$/.test(row.card_id))return;
+  data.stats[row.card_id]=v;stamps[row.card_id]=stamp;changed=true;
+ });
+ if(changed){persist();localStorage.setItem(deutschStampKey+active,JSON.stringify(stamps))}
+}
+function queueDeutsch(id,state){
+ if(!deutschCloud?.enabled||active!==deutschCloud.slug)return;
+ const ev=deutschCloud.enqueue(String(id),state),stamps=deutschStamps();
+ stamps[id]=Date.parse(ev.at);localStorage.setItem(deutschStampKey+active,JSON.stringify(stamps));
+ syncDeutsch().catch(()=>{});
+}
+window.addEventListener("online",()=>syncDeutsch().catch(()=>{}));
+function switchProfile(name){const id=key(name);if(!profiles[id])return;active=id;data=profiles[id];persist();phase="home";syncDeutsch().then(render)}
 function createProfile(name){name=name.trim();if(!name)return false;const id=key(name);if(profiles[id]){switchProfile(name);return true}profiles[id]=blank(name);switchProfile(name);return true}
 let phase="home",queue=[],index=0,answer="",checked=false,correct=false,score=0,sessionMistakes={},sessionSeen={};
 const DAY=86400000;const intervals=[1,3,7,14,30];
@@ -77,7 +98,7 @@ s.next=Date.now()+(correct?intervals[s.level-1]*DAY:0);
 }
 // An early voluntary success must not move the next scheduled review forward.
 if(!correct){sessionMistakes[id]=(sessionMistakes[id]||0)+1;if(sessionMistakes[id]<=2){const at=Math.min(index+3,queue.length);queue.splice(at,0,id)}}
-sessionSeen[id]=(sessionSeen[id]||0)+1;data.stats[id]=s;data.log.push({id,correct,date:new Date().toISOString(),profile:data.profile});save();render()}
+sessionSeen[id]=(sessionSeen[id]||0)+1;data.stats[id]=s;data.log.push({id,correct,date:new Date().toISOString(),profile:data.profile});save();queueDeutsch(id,s);render()}
 function next(){if(++index>=queue.length)phase="results";answer="";checked=false;render()}
 function importData(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const imported=JSON.parse(reader.result);if(!imported||!imported.stats||!Array.isArray(imported.log))throw Error("Ungültiges Format");const name=String(imported.profile||"Importiertes Profil").trim();if(!name)throw Error("Profilname fehlt");const id=key(name);if(profiles[id]&&!confirm("Das Profil "+name+" existiert bereits. Lernstände zusammenführen?"))return;if(profiles[id]){const old=profiles[id];for(const [k,v] of Object.entries(imported.stats)){if(!old.stats[k]||((v.right||0)+(v.wrong||0))>((old.stats[k].right||0)+(old.stats[k].wrong||0)))old.stats[k]=v}const existing=new Set(old.log.map(x=>JSON.stringify(x)));for(const item of imported.log){const sig=JSON.stringify(item);if(!existing.has(sig)){old.log.push(item);existing.add(sig)}}}else profiles[id]={profile:name,stats:imported.stats,log:imported.log};switchProfile(name);alert("Lernstand importiert.")}catch(e){alert("Import fehlgeschlagen: "+e.message)}};reader.readAsText(file)}
 function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="deutsch-mission-"+(active||"backup")+".json";a.click();URL.revokeObjectURL(a.href)}
