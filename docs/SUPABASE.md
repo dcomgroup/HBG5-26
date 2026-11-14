@@ -55,3 +55,8 @@ Kostenlos starten. Ein täglicher GitHub-Actions-Keep-alive ist nur eine geplant
 - Noch nicht freigegeben: Browserintegration, Profilisolation/Fehlerschlüsseltests, Synchronisationskonflikte, Migration, Rate-Limits, Pagination über 10.000 Ereignisse.
 
 - Ergänzender SQL-Test erfolgreich: falsches Profilgeheimnis für Lesen und Schreiben abgewiesen; Profile A/B isoliert; doppelte Event-ID erzeugt nur einen Eintrag. Testtransaktion zurückgerollt. Wiederholbarer Test: `supabase/tests/profile_isolation.sql`.
+
+## Latein-Pilot: erster Frontend-Schritt
+- Auf dem Feature-Branch existiert `latein/shared/supabase-sync.js` mit optionalem RPC-Transport. Aktivierung erfordert `window.HBG_SUPABASE_PUBLISHABLE_KEY`, Profil-Slug `?p=...` und 64-stelliges Geheimnis im URL-Fragment `#sync=...`. Noch keine Schlüssel konfiguriert oder produktive Aktivierung.
+- `app.js` schreibt weiterhin lokal und legt neue Antworten zusätzlich in eine IndexedDB-Warteschlange. Erfolgreich bestätigte Ereignisse werden daraus entfernt; Fehler bleiben für spätere Wiederholung.
+- Noch nicht implementiert: Remote-Read/Merge in die Karteikartenhistorie, sichere Profilanlage im UI, Altstand-Migration, Ende-zu-Ende-Browsertests, konkurrierende Flush-Sperre, Größenlimits und Datenschutz-/Missbrauchstests. Daher keine Freigabe für Produktivbetrieb.
