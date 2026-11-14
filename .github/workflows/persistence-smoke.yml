@@ -18,3 +18,4 @@ jobs:
       - run: mkdir -p /tmp/hbg-preview/HBG5-26 && cp -a . /tmp/hbg-preview/HBG5-26/
       - run: python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/hbg-preview &
       - run: node tests/browser-smoke.cjs
+      - run: node tests/live-supabase.cjs
