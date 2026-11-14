@@ -45,7 +45,8 @@ async function syncDeutsch(){
  await deutschCloud.sync(row=>{
   const stamp=Date.parse(row.occurred_at),v=row.event_data?.state;
   if(!v||!Number.isFinite(stamp)||stamp<=Number(stamps[row.card_id]||0))return;
-  if(!/^\d+$/.test(row.card_id))return;
+  if(row.card_id.startsWith("log:")){if(!data.log.some(item=>item.cloudId===row.card_id)){data.log.push({...v,cloudId:row.card_id});changed=true}return}
+  if(!/^[0-9]+$/.test(row.card_id))return;
   data.stats[row.card_id]=v;stamps[row.card_id]=stamp;changed=true;
  });
  if(changed){persist();localStorage.setItem(deutschStampKey+active,JSON.stringify(stamps))}
@@ -55,6 +56,11 @@ function queueDeutsch(id,state){
  const ev=deutschCloud.enqueue(String(id),state),stamps=deutschStamps();
  stamps[id]=Date.parse(ev.at);localStorage.setItem(deutschStampKey+active,JSON.stringify(stamps));
  syncDeutsch().catch(()=>{});
+}
+function queueDeutschLog(entry){
+ if(!deutschCloud?.enabled||active!==deutschCloud.slug)return;
+ const id="log:"+crypto.randomUUID();entry.cloudId=id;
+ deutschCloud.enqueue(id,{...entry});syncDeutsch().catch(()=>{});
 }
 window.addEventListener("online",()=>syncDeutsch().catch(()=>{}));
 function switchProfile(name){const id=key(name);if(!profiles[id])return;active=id;data=profiles[id];persist();phase="home";syncDeutsch().then(render)}
@@ -98,7 +104,7 @@ s.next=Date.now()+(correct?intervals[s.level-1]*DAY:0);
 }
 // An early voluntary success must not move the next scheduled review forward.
 if(!correct){sessionMistakes[id]=(sessionMistakes[id]||0)+1;if(sessionMistakes[id]<=2){const at=Math.min(index+3,queue.length);queue.splice(at,0,id)}}
-sessionSeen[id]=(sessionSeen[id]||0)+1;data.stats[id]=s;data.log.push({id,correct,date:new Date().toISOString(),profile:data.profile});save();queueDeutsch(id,s);render()}
+sessionSeen[id]=(sessionSeen[id]||0)+1;data.stats[id]=s;const entry={id,correct,date:new Date().toISOString(),profile:data.profile};data.log.push(entry);queueDeutschLog(entry);save();queueDeutsch(id,s);render()}
 function next(){if(++index>=queue.length)phase="results";answer="";checked=false;render()}
 function importData(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const imported=JSON.parse(reader.result);if(!imported||!imported.stats||!Array.isArray(imported.log))throw Error("Ungültiges Format");const name=String(imported.profile||"Importiertes Profil").trim();if(!name)throw Error("Profilname fehlt");const id=key(name);if(profiles[id]&&!confirm("Das Profil "+name+" existiert bereits. Lernstände zusammenführen?"))return;if(profiles[id]){const old=profiles[id];for(const [k,v] of Object.entries(imported.stats)){if(!old.stats[k]||((v.right||0)+(v.wrong||0))>((old.stats[k].right||0)+(old.stats[k].wrong||0)))old.stats[k]=v}const existing=new Set(old.log.map(x=>JSON.stringify(x)));for(const item of imported.log){const sig=JSON.stringify(item);if(!existing.has(sig)){old.log.push(item);existing.add(sig)}}}else profiles[id]={profile:name,stats:imported.stats,log:imported.log};switchProfile(name);alert("Lernstand importiert.")}catch(e){alert("Import fehlgeschlagen: "+e.message)}};reader.readAsText(file)}
 function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="deutsch-mission-"+(active||"backup")+".json";a.click();URL.revokeObjectURL(a.href)}
@@ -116,4 +122,4 @@ root.innerHTML='<section class="card"><div class="row"><span>Aufgabe '+(index+1)
 if(opts){document.querySelectorAll(".option").forEach(b=>{b.onclick=()=>{if(checked)return;answer=b.dataset.value;document.querySelectorAll(".option").forEach(x=>x.classList.toggle("chosen",x===b))}})}else{$("typed").value=answer;$("typed").oninput=e=>answer=e.target.value}
 if(checked){$("feedback").innerHTML='<p class="'+(correct?"good":"bad")+'">'+(correct?"✓ Richtig!":"✗ Richtige Antwort: "+esc(q[1]))+'</p><p>'+esc(q[3])+'</p>';document.querySelectorAll(".option").forEach(b=>{b.disabled=true;b.classList.toggle("good",b.dataset.value===q[1]);b.classList.toggle("bad",b.dataset.value===answer&&!correct)});if($("typed"))$("typed").disabled=true}
 $("action").onclick=()=>{if(checked)next();else if(answer.trim())check()};}
-if(deutschCloud?.enabled){if(!profiles[deutschCloud.slug])profiles[deutschCloud.slug]=blank(deutschCloud.slug);active=deutschCloud.slug;data=profiles[active];persist();const migration="hbg5-26-deutsch-cloud-migrated:"+active;if(!localStorage.getItem(migration)){for(const [id,v] of Object.entries(data.stats))queueDeutsch(id,v);localStorage.setItem(migration,"1")}syncDeutsch().then(render)}else render();
+if(deutschCloud?.enabled){if(!profiles[deutschCloud.slug])profiles[deutschCloud.slug]=blank(deutschCloud.slug);active=deutschCloud.slug;data=profiles[active];persist();const migration="hbg5-26-deutsch-cloud-migrated:"+active;if(!localStorage.getItem(migration)){for(const [id,v] of Object.entries(data.stats))queueDeutsch(id,v);for(const entry of data.log){if(!entry.cloudId)queueDeutschLog(entry)}persist();localStorage.setItem(migration,"1")}syncDeutsch().then(render)}else render();
