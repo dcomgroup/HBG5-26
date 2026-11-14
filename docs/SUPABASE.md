@@ -60,3 +60,11 @@ Kostenlos starten. Ein täglicher GitHub-Actions-Keep-alive ist nur eine geplant
 - Auf dem Feature-Branch existiert `latein/shared/supabase-sync.js` mit optionalem RPC-Transport. Aktivierung erfordert `window.HBG_SUPABASE_PUBLISHABLE_KEY`, Profil-Slug `?p=...` und 64-stelliges Geheimnis im URL-Fragment `#sync=...`. Noch keine Schlüssel konfiguriert oder produktive Aktivierung.
 - `app.js` schreibt weiterhin lokal und legt neue Antworten zusätzlich in eine IndexedDB-Warteschlange. Erfolgreich bestätigte Ereignisse werden daraus entfernt; Fehler bleiben für spätere Wiederholung.
 - Noch nicht implementiert: Remote-Read/Merge in die Karteikartenhistorie, sichere Profilanlage im UI, Altstand-Migration, Ende-zu-Ende-Browsertests, konkurrierende Flush-Sperre, Größenlimits und Datenschutz-/Missbrauchstests. Daher keine Freigabe für Produktivbetrieb.
+
+## Latein-Pilot: weiterentwickelt (2026-11-14)
+- Publishable Key (kein privilegierter Service-Key) ist im optionalen Browser-Transport hinterlegt.
+- UI bietet explizite Cloud-Profilreservierung mit 256-Bit-Geheimnis im URL-Fragment, manuellen Sync, Wiederholungsversuche und Remote-Ereignis-Merge anhand `state.seen`. Beide Lateintests teilen die Cloud-App-ID `latein`.
+- Offline-Warteschlange wird beim Flush gegen paralleles Hinzufügen geschützt; Flushes sind serialisiert. Import bestehender Sicherungen führt neuere Stände zusammen statt sie pauschal zu überschreiben. Cloud-Übertragung eines Imports erfordert gesonderte Bestätigung.
+- SQL-Funktionen sind unter `supabase/migrations/20261114_02_learning_events_rpc.sql` versioniert.
+- RPCs wurden mit `SET LOCAL ROLE anon` innerhalb einer zurückgerollten Testtransaktion erfolgreich auf Schreiben/Lesen geprüft.
+- **Keine Produktivfreigabe**: Es fehlen echte Browser- und Zwei-Geräte-Ende-zu-Ende-Tests, Last-/Missbrauchsschutz für öffentliche Profilanlage, umfangreiche Konflikttests, Prüfung von Browser-Speicher-Ausfällen, Sicherungs-/Wiederherstellungsplan und Freigabe der Änderungen nach Review. Der Branch ist nicht auf `main` gemergt.
