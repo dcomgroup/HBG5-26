@@ -36,3 +36,11 @@ Kostenlos starten. Ein täglicher GitHub-Actions-Keep-alive ist nur eine geplant
 - Andere Profile bleiben isoliert.
 - Offline-Übungen bleiben erhalten und synchronisieren nach Rückkehr der Verbindung.
 - Wiederholungsdaten bleiben nach Update, Browser-Neustart und Migration erhalten.
+
+## Implementierungsstand 2026-11-14
+- Nutzer hat das Supabase-Projekt angelegt und die leeren Tabellen `profiles` und `learning_events` mit RLS und entzogenen Tabellenrechten per SQL Editor erstellt (gemeldeter Erfolg, nicht unabhängig aus der Datenbank verifiziert).
+- Die atomare Reservierungsfunktion liegt als **noch nicht ausgeführte** Migration unter `supabase/migrations/20261114_01_reserve_profile.sql` auf dem Feature-Branch.
+- Profilgeheimnisse: 32 kryptographisch zufällige Bytes, lowercase hex; nur SHA-256-Hash in der Datenbank. Geheimnis gehört in das URL-Fragment, nicht in Query-Parameter oder Serverlogs.
+- Die Reservierungsfunktion erhält ausschließlich `EXECUTE` für `anon`; die Tabellen bleiben ohne direkte Browserrechte. Weitere Zugriffs- und Synchronisationsfunktionen sind noch nicht implementiert.
+- Vor Anwendung prüfen, ob `extensions.digest` verfügbar ist. Bei Fehler keine unsichere Ersatzfunktion verwenden.
+- Noch ausstehend: Reservierungs- und Kollisionsprüfung, isolierter Lese-/Schreibzugriff, Missbrauchsschutz, Offline-Merge und Migrationstests.
