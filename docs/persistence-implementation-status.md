@@ -72,3 +72,9 @@ Branch: `feature/persistence-integration-20261115`. **Keine Freigabe für main.*
 - Anschließend weitere Codeänderung: Englisch setzt den `syncAgain`-Retry bei laufender Synchronisierung korrekt und persistiert den lokalen Cloud-Zeitstempel beim Queueing.
 - Playwright-Test ergänzt: simulierte Offline-Antwort, Prüfung der lokalen Outbox, erneuter Upload beim `online`-Event und keine doppelten Event-IDs. **Für diese neuen Assertions liegt noch kein bestätigter CI-Erfolg vor.**
 - Serverseitige RPC `append_learning_event` geprüft: Tokenhash-Prüfung, Payload-Limit 16 KB, UUID-idempotenter Insert. Offene Langzeitthemen: 10.000er Leselimit und Replay/gleichzeitige Offline-Änderungen.
+
+## Abnahme 15.11.2026: bestätigte Ergebnisse
+- GitHub Actions Run #32 (`Persistence smoke`) erfolgreich; Job `smoke` einschließlich `node tests/browser-smoke.cjs` mit `success` abgeschlossen. Separater `Lernapps smoke checks`-Run #25 erfolgreich.
+- Supabase SQL-Test mit `set local role anon` in zurückgerollter Transaktion erfolgreich: Profil reserviert, Ereignis angehängt, mit korrektem Token wieder gelesen; identische UUID zweimal angehängt und genau ein Ereignis gelesen; falsches Token bei `read_learning_events` abgewiesen.
+- Diese Datenbanktests verwenden eine SQL-Transaktion mit `rollback`; keine dauerhaften Testprofile oder Ereignisse erzeugt.
+- **Nicht durch diesen Test bewiesen:** Browser-zu-echter-Supabase-Verbindung über HTTPS/CORS und echte zwei Geräte. Der Playwright-Zwei-Kontext-Test verwendet einen simulierten RPC-Endpunkt.
