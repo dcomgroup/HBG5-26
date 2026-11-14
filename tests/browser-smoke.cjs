@@ -1,6 +1,6 @@
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
-const base='http://127.0.0.1:8765/';
+const base='http://127.0.0.1:8765/HBG5-26/';
 const routes=['','latein/test-01/','latein/test-02/','mathe/test-01/','deutsch/test-01/','biologie/klassenarbeit-01/','englisch/test-01/'];
 (async()=>{
  const browser=await chromium.launch({headless:true});
