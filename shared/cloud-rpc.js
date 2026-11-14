@@ -8,14 +8,14 @@ async function rpc(name,body){if(!enabled)throw Error("Cloud unavailable");const
 window.HBG_CLOUD={enabled,slug,create(app){
  const outboxKey="hbg5-26-cloud-pending:"+slug+":"+app;
  const pending=()=>{try{return JSON.parse(localStorage.getItem(outboxKey)||"[]")}catch{return []}};
- let busy=false;
+ let busy=false,again=false;
  return {enabled,slug,
-  async sync(onRow){if(!enabled||busy)return;busy=true;try{
+  async sync(onRow){if(!enabled)return;if(busy){again=true;return}busy=true;try{
     const sent=new Set();for(const ev of pending()){await rpc("append_learning_event",{p_slug:slug,p_secret:secret,p_event_id:ev.id,p_app_id:app,p_card_id:ev.cardId,p_event_data:ev.data,p_occurred_at:ev.at});sent.add(ev.id)}
     if(sent.size)localStorage.setItem(outboxKey,JSON.stringify(pending().filter(e=>!sent.has(e.id))));
     const rows=await rpc("read_learning_events",{p_slug:slug,p_secret:secret,p_app_id:app});
     for(const row of rows)await onRow(row);
-   }catch(e){console.warn("Cloud sync deferred",e)}finally{busy=false}},
+   }catch(e){console.warn("Cloud sync deferred",e)}finally{busy=false;if(again){again=false;queueMicrotask(()=>this.sync(onRow))}}},
   enqueue(cardId,state){if(!enabled)return;const at=new Date().toISOString();const ev={id:crypto.randomUUID(),cardId,data:{state},at};localStorage.setItem(outboxKey,JSON.stringify([...pending(),ev]));return ev}
  };
 }};
