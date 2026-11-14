@@ -1,0 +1,5 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lernprofil öffnen</title><p>Lernprofil wird geöffnet …</p><script>
+const base="/HBG5-26/",path=decodeURIComponent(location.pathname.startsWith(base)?location.pathname.slice(base.length):"").replace(/\/$/,"");
+if(/^[a-z0-9][a-z0-9-]{2,23}$/.test(path))location.replace(base+"?p="+encodeURIComponent(path));
+else{document.body.textContent="Diese Seite wurde nicht gefunden.";let a=document.createElement("a");a.href=base;a.textContent="Zur Startseite";document.body.append(a)}
+</script></html>
