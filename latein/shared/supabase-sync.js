@@ -1,0 +1,21 @@
+/* Optional Supabase sync. No keys or credentials are bundled here. */
+(function () {
+"use strict";
+const PROJECT="https://velspjtxenbvvwgptahh.supabase.co";
+const KEY=window.HBG_SUPABASE_PUBLISHABLE_KEY;
+const match=location.hash.match(/(?:^#|&)sync=([0-9a-f]{64})(?:&|$)/);
+const secret=match&&match[1];
+const slug=new URLSearchParams(location.search).get("p");
+const enabled=Boolean(KEY&&secret&&slug&&/^[a-z0-9][a-z0-9-]{2,63}$/.test(slug));
+async function rpc(name,body){
+  if(!enabled)throw Error("Sync not configured");
+  const res=await fetch(PROJECT+"/rest/v1/rpc/"+name,{method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store"});
+  if(!res.ok)throw Error("Sync HTTP "+res.status);
+  return res.json();
+}
+window.HBG_LATIN_SYNC={
+  enabled,
+  async read(){return rpc("read_learning_events",{p_slug:slug,p_secret:secret,p_app_id:"latein"});},
+  async append(event){return rpc("append_learning_event",{p_slug:slug,p_secret:secret,p_event_id:event.id,p_app_id:"latein",p_card_id:event.cardId,p_event_data:event.data,p_occurred_at:event.at});}
+};
+})();
