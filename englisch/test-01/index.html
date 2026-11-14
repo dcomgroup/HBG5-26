@@ -4,7 +4,7 @@ const cloud=window.HBG_ENGLISH_SYNC,outboxKey="hbg5-26-englisch-outbox:"+(cloud?
 let syncing=false,syncAgain=false;
 function pending(){try{return JSON.parse(localStorage.getItem(outboxKey)||"[]")}catch{return []}}
 async function syncCloud(){
- if(!cloud?.enabled||syncing)return;syncing=true;
+ if(!cloud?.enabled)return;if(syncing){syncAgain=true;return}syncing=true;
  try{
   const sent=new Set();for(const ev of pending()){await cloud.append(ev);sent.add(ev.id)}
   if(sent.size)localStorage.setItem(outboxKey,JSON.stringify(pending().filter(e=>!sent.has(e.id))));
@@ -19,8 +19,9 @@ async function syncCloud(){
 }
 function queueCloud(id,state){
  if(!cloud?.enabled||name!==cloud.slug)return;
- const at=new Date().toISOString(),ev={id:crypto.randomUUID(),cardId:id,data:{state:{...state,_cloudAt:Date.parse(at)}},at};
- localStorage.setItem(outboxKey,JSON.stringify([...pending(),ev]));syncCloud().catch(()=>{});
+ const at=new Date().toISOString();state._cloudAt=Date.parse(at);
+ const ev={id:crypto.randomUUID(),cardId:id,data:{state:{...state}},at};
+ localStorage.setItem(outboxKey,JSON.stringify([...pending(),ev]));save();syncCloud().catch(()=>{});
 }
 window.addEventListener("online",()=>syncCloud().catch(()=>{}));
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));const save=()=>localStorage.setItem(KEY,JSON.stringify(db));const profile=()=>db.profiles[name];const norm=s=>s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[.!?]/g,"").replace(/\s+/g," ").trim();
