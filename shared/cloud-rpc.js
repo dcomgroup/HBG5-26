@@ -15,7 +15,7 @@ window.HBG_CLOUD={enabled,slug,create(app){
     if(sent.size)localStorage.setItem(outboxKey,JSON.stringify(pending().filter(e=>!sent.has(e.id))));
     const rows=await rpc("read_learning_events",{p_slug:slug,p_secret:secret,p_app_id:app});
     for(const row of rows)await onRow(row);
-   }catch(e){console.warn("Cloud sync deferred",e)}finally{busy=false;if(again){again=false;queueMicrotask(()=>this.sync(onRow))}}},
+   }catch(e){console.warn("Cloud sync deferred",e)}finally{busy=false;if(again||pending().length){again=false;queueMicrotask(()=>this.sync(onRow))}}},
   enqueue(cardId,state){if(!enabled)return;const at=new Date().toISOString();const ev={id:crypto.randomUUID(),cardId,data:{state},at};localStorage.setItem(outboxKey,JSON.stringify([...pending(),ev]));return ev}
  };
 }};
