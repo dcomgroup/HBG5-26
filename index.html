@@ -83,7 +83,7 @@ function showProfile(){
   localStorage.setItem(PROFILE_KEY,activeProfile);
   const cloudSecret=secretFor(activeProfile);
   if(cloudSecret){
-   box.innerHTML='<strong>Cloud-Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Persönlicher Link für mehrere Geräte. Wer diesen vollständigen Link besitzt, kann auf den Lernstand zugreifen. Nicht öffentlich teilen.</p><p><code id="profile-link"></code></p><p><button id="copy-profile">Persönlichen Link kopieren</button> <button id="switch-profile">Anderes Profil auswählen</button></p><p class="hint">Cloud-Synchronisierung im Test: Mathe und Englisch. Weitere Apps folgen.</p><div id="migration"></div>';
+   box.innerHTML='<strong>Cloud-Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Persönlicher Link für mehrere Geräte. Wer diesen vollständigen Link besitzt, kann auf den Lernstand zugreifen. Nicht öffentlich teilen.</p><p><code id="profile-link"></code></p><p><button id="copy-profile">Persönlichen Link kopieren</button> <button id="switch-profile">Anderes Profil auswählen</button></p><p class="hint">Cloud-Synchronisierung im Test für Mathe, Schnellcheck, Deutsch, Biologie, Latein und Englisch.</p><div id="migration"></div>';
    document.getElementById("active-profile-name").textContent=activeProfile;
    const personal=new URL(prefix,location.origin);personal.searchParams.set("p",activeProfile);personal.hash="sync="+cloudSecret;
    document.getElementById("profile-link").textContent=personal.href;
