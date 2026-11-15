@@ -12,7 +12,7 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 .track-label{font-size:.76rem;color:#7b8795;margin-top:5px}.done .track{display:none}.done .track-label{display:none}
 .done{background:#f0f1f3;border-color:#e0e3e8;box-shadow:none}.done a{color:#667386}.done .meta{color:#78828c}
 .upcoming{margin:20px 0 28px}.upcoming h2{margin-bottom:10px}.upcoming-list{background:#fff;border:1px solid #e4e9f1;border-radius:15px;padding:4px 16px}.upcoming-item{padding:12px 0;border-bottom:1px solid #edf0f4}.upcoming-item:last-child{border-bottom:0}.upcoming-item a{color:#2458b8;font-weight:650;text-decoration:none}.upcoming-item .meta{margin-top:3px}
-.profile-box{background:#fff;border:1px solid #dfe5ee;border-radius:16px;padding:18px;margin:18px 0}.profile-box input,.profile-box button{font:inherit;padding:10px;border-radius:9px;border:1px solid #b9c5d6}.profile-box button{background:#2458b8;color:white;cursor:pointer}.profile-box .hint{font-size:.85rem;color:#627084}.profile-box .error{color:#ad2525}.profile-box code{overflow-wrap:anywhere}
+.profile-box{background:#fff;border:1px solid #dfe5ee;border-radius:16px;padding:18px;margin:18px 0}.profile-box input,.profile-box button{font:inherit;padding:10px;border-radius:9px;border:1px solid #b9c5d6}.profile-box button{background:#2458b8;color:white;cursor:pointer}.profile-box button:disabled{background:#e5e9ef;color:#667386;cursor:not-allowed}.profile-box .hint{font-size:.85rem;color:#627084}.profile-box .error{color:#ad2525}.profile-box code{overflow-wrap:anywhere}
 </style></head><body>
 <header><h1>HBG5-26</h1><p>Lernapps für das Schuljahr 2026/27</p></header><div class="profile-box" id="profile-box"></div>
 <nav class="upcoming" aria-label="Nächste Prüfungen"><h2>Als Nächstes dran</h2><div class="upcoming-list" id="upcoming-list"></div></nav>
@@ -60,30 +60,32 @@ function freshSuggestions(){
 function showProfile(){
  if(activeProfile){
   localStorage.setItem(PROFILE_KEY,activeProfile);
-  box.innerHTML='<strong>Dein Lernprofil: '+activeProfile+'</strong><p class="hint">Dieser Link öffnet dein Profil auf diesem Gerät. Eine geräteübergreifende Synchronisation ist noch nicht eingerichtet.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testversion öffnen</button></p>';
+  box.innerHTML='<strong>Lokales Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Dein Lernfortschritt wird nur in diesem Browser gespeichert. Dieses Profil wird noch nicht mit anderen Geräten synchronisiert.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testmodus öffnen</button></p><p class="hint">Cloud-Lernprofile werden nach der Supabase-Integration freigeschaltet.</p>';
+  document.getElementById("active-profile-name").textContent=activeProfile;
   document.getElementById("switch-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
-  document.getElementById("demo-profile").onclick=()=>{location.href=prefix};
+  document.getElementById("demo-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
  }else{
-  box.innerHTML='<strong>Testversion</strong><p class="hint">Hier kannst du die Lernapps ausprobieren. Die Lernstände bleiben auf diesem Gerät.</p><h2>Eigenes Lernprofil</h2><p class="hint">Wähle einen vorgeschlagenen Lernlink. Die zufälligen Zeichen machen doppelte Namen sehr unwahrscheinlich.</p><div id="profile-choices"></div><p><button id="refresh-profiles" type="button">Andere Vorschläge</button></p><p class="error" id="profile-error" role="alert"></p><p class="hint">Die zentrale Prüfung, ob ein Name bereits auf einem anderen Gerät verwendet wird, folgt mit der Datenbankanbindung.</p>';
-  const choices=document.getElementById("profile-choices");
+  box.innerHTML='<strong>Testmodus · nur auf diesem Gerät</strong><p class="hint">Du kannst alle Lernapps ausprobieren. Dein Lernfortschritt wird nur in diesem Browser gespeichert und nicht mit anderen Geräten synchronisiert.</p><h2>Lokales Lernprofil auswählen</h2><p class="hint">Du kannst ein lokales Profil anlegen. Ein Namensvorschlag allein legt noch kein Profil an.</p><div id="profile-choices"></div><p><button id="refresh-profiles" type="button">Andere Vorschläge</button></p><div id="profile-confirm" hidden><p><strong>Lokales Profil <span id="chosen-profile"></span> anlegen?</strong></p><p class="hint">Der Lernstand bleibt auf diesem Gerät. Es wird kein Cloud-Profil angelegt.</p><button id="confirm-profile" type="button">Lokales Profil anlegen</button> <button id="cancel-profile" type="button">Abbrechen</button></div><p class="error" id="profile-error" role="alert"></p><h2>Geräteübergreifend lernen</h2><p class="hint">Mit einem Cloud-Lernprofil kannst du später über einen persönlichen Link auf mehreren Geräten lernen. Die Aktivierung erfolgt ausdrücklich und erst nach der Supabase-Freigabe.</p><button type="button" disabled title="Nach der Supabase-Freigabe verfügbar">Cloud-Lernprofil aktivieren (demnächst)</button>';
+  const choices=document.getElementById("profile-choices"),confirmation=document.getElementById("profile-confirm");
   function drawSuggestions(){
-   choices.replaceChildren();
+   confirmation.hidden=true;choices.replaceChildren();
    freshSuggestions().forEach(name=>{
     const button=document.createElement("button");button.type="button";button.textContent=name;button.style.margin="0 8px 8px 0";
     button.onclick=()=>{
-     if(!validSlug(name)||RESERVED_PROFILES.has(name)||knownProfiles().includes(name)){
-      document.getElementById("profile-error").textContent="Dieser Name ist bereits auf diesem Gerät vergeben. Bitte wähle einen anderen.";drawSuggestions();return;
-     }
-     const known=knownProfiles();known.push(name);localStorage.setItem(PROFILE_REGISTRY_KEY,JSON.stringify(known));
-     activeProfile=name;history.replaceState(null,"",prefix+encodeURIComponent(name));
-     showProfile();
-     box.insertAdjacentHTML("beforeend",'<p><strong>Dein persönlicher Link:</strong></p><p><code id="profile-link"></code></p><button id="copy-profile">Link kopieren</button>');
-     document.getElementById("profile-link").textContent=location.href;
-     document.getElementById("copy-profile").onclick=()=>navigator.clipboard?.writeText(location.href);
+     document.getElementById("chosen-profile").textContent=name;
+     confirmation.hidden=false;
+     document.getElementById("confirm-profile").onclick=()=>{
+      if(!validSlug(name)||RESERVED_PROFILES.has(name)||knownProfiles().includes(name)){
+       document.getElementById("profile-error").textContent="Dieser Name ist bereits auf diesem Gerät vergeben. Bitte wähle einen anderen.";drawSuggestions();return;
+      }
+      const known=knownProfiles();known.push(name);localStorage.setItem(PROFILE_REGISTRY_KEY,JSON.stringify(known));
+      activeProfile=name;history.replaceState(null,"",prefix+"?p="+encodeURIComponent(name));showProfile();
+     };
     };
     choices.append(button);
    });
   }
+  document.getElementById("cancel-profile").onclick=()=>{confirmation.hidden=true};
   document.getElementById("refresh-profiles").onclick=drawSuggestions;
   drawSuggestions();
  }
