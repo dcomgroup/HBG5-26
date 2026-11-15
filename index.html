@@ -57,9 +57,12 @@ function profileLinks(){
   const url=new URL(original,document.baseURI);
   url.searchParams.delete("p");url.searchParams.delete("demo");url.hash="";
   if(activeProfile){
-   url.searchParams.set("p",activeProfile);
    const secret=secretFor(activeProfile);
-   if(secret&&verifiedCloud.has(activeProfile))url.hash="sync="+secret;
+   if(secret&&!verifiedCloud.has(activeProfile))url.searchParams.set("demo","1");
+   else{
+    url.searchParams.set("p",activeProfile);
+    if(secret)url.hash="sync="+secret;
+   }
   }else url.searchParams.set("demo","1");
   a.href=url.href;
  });
