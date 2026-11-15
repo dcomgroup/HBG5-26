@@ -19,4 +19,4 @@ jobs:
       - name: Check JavaScript syntax and app entry points
         run: node scripts/check-apps.cjs
       - name: Test optional Supabase transport
-        run: node tests/v1-cloud-transport.cjs
+        run: node tests/v1-cloud-transport.cjs && node tests/v1-english-cloud.cjs
