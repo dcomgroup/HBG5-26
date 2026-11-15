@@ -40,5 +40,12 @@ assert.equal(cloud.enabled,true);
  await cloud.sync();
  p=JSON.parse(localStorage.getItem(key)).profiles[slug];
  assert.equal(p.cards["1"].right,7);
+ // A newer remote snapshot with fewer answered attempts must not erase local progress.
+ p.cards["0"]={level:2,right:8,wrong:1,_cloudAt:Date.parse("2026-11-15T12:00:00Z")};
+ localStorage.setItem(key,JSON.stringify({profiles:{[slug]:p}}));
+ events.push({event_id:"stale-device",card_id:"0",event_data:{state:{level:0,right:1,wrong:1}},occurred_at:"2026-11-15T15:00:00Z"});
+ await cloud.sync();
+ p=JSON.parse(localStorage.getItem(key)).profiles[slug];
+ assert.equal(p.cards["0"].right,8,"remote lower attempt count must not regress local card");
  console.log("PASS: Math Panda import replay, offline queue, idempotency and local data protection");
 })().catch(e=>{console.error(e);process.exitCode=1});
