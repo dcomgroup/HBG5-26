@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/HBG5-26",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/HBG5-26/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/HBG5-26/:profile([a-z0-9][a-z0-9-]{2,23})",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/HBG5-26/:path*",
+      "destination": "/:path*"
+    }
+  ]
+}
