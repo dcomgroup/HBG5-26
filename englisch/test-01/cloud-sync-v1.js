@@ -21,7 +21,7 @@ function enqueue(cardId,state){
  localStorage.setItem(outboxKey,JSON.stringify([...readQueue(),event]));
  return event;
 }
-async function sync(){
+async function sync(options={}){
  if(syncing){syncAgain=true;return false;}
  syncing=true;
  try{
@@ -31,6 +31,7 @@ async function sync(){
    // Remove one acknowledged event at a time. A failure must retain all unsent events.
    localStorage.setItem(outboxKey,JSON.stringify(readQueue().filter(e=>e.id!==event.id)));
   }
+  if(options.pushOnly)return true;
   const rows=await client.read(appId);
   const db=readLocal();db.profiles||={};
   const p=db.profiles[slug]||{cards:{}};p.cards||={};
@@ -56,12 +57,12 @@ async function sync(){
  }catch{
   window.dispatchEvent(new CustomEvent("hbg-cloud-pending",{detail:{appId}}));
   return false;
- }finally{syncing=false;if(syncAgain){syncAgain=false;queueMicrotask(()=>void sync());}}
+ }finally{syncing=false;if(syncAgain){syncAgain=false;queueMicrotask(()=>void sync({pushOnly:true}));}}
 }
 function record(cardId,state){
  const event=enqueue(cardId,state);
  state._cloudAt=Date.parse(event.at);
- void sync();
+ void sync({pushOnly:true});
 }
 window.addEventListener("online",()=>void sync());
 window.HBG_ENGLISH_CLOUD=Object.freeze({enabled:true,slug,record,sync,pending:()=>readQueue().length});
