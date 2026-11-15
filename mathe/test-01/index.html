@@ -43,5 +43,5 @@ if(routedProfile&&/^[a-z0-9][a-z0-9-]{2,63}$/.test(routedProfile)){
  db.profiles[name]||={cards:{},rounds:0,answers:0};
  save();
  if(mathCloud?.enabled){A.innerHTML="<section><p>Cloud-Lernstand wird geladen …</p></section>";mathCloud.sync().then(ok=>{if(!ok){A.innerHTML="<section><h2>Cloud-Lernstand nicht geladen</h2><p>Bitte prüfe deine Internetverbindung und versuche es erneut.</p><button id=\"retry-cloud\">Erneut versuchen</button></section>";document.getElementById("retry-cloud").onclick=()=>location.reload();return}try{db=JSON.parse(localStorage.getItem(K))||db}catch{}db.profiles||={};db.profiles[name]||={cards:{},rounds:0,answers:0};home()})}else if(routedProfile){A.innerHTML="<section><h2>Cloud-Profil nicht verfügbar</h2><p>Bitte öffne einen gültigen Profillink.</p></section>"}else home();
-}else profiles();
+}else {const localName=new URLSearchParams(location.search).get("local");if(localName&&localName.length<=40){name=localName;db.profiles[name]||={cards:{},rounds:0,answers:0};save();home()}else profiles()}
 </script><script defer src="../../shared/feedback.js?v=1"></script></html>
