@@ -50,3 +50,11 @@ Stand 2026-11-15. **Nur Entwicklungsbranch, kein Produktiv-Rollout.**
 - Vercel-Projekt `hbg5-26-preview` (Team `fe-26`) hat das Hobby-Limit von mehr als 100 API-Deployments innerhalb von 24 Stunden erreicht (`402 api-deployments-young-hobby-team-24h`).
 - Letzter bestätigter Vercel-Preview-Commit: `97d25b5223c05764bea2c2015b2033ef76745bf8`. Dieser ist **nicht** der aktuelle Entwicklungsstand und darf nicht als Abnahme des aktuellen PR #12 gelten.
 - Browser-Regressionen laufen unabhängig davon in GitHub Actions auf dem tatsächlichen PR-Commit mit lokalem HTTP-Server und Chromium. Für die finale menschliche Preview-Abnahme ist nach Ablauf der Vercel-Sperre ein neues Deployment erforderlich. Keine Produktionsfreigabe währenddessen.
+
+## Verifizierte Regressionen (15.11.2026, Commit `bba4331dae3119bdacc4ce73cb1b90514abb4ca6`)
+- GitHub Actions Node-Checks **erfolgreich**: Lauf `43736973086`.
+- GitHub Actions Chromium-Browser-Smoke **erfolgreich**: Lauf `43736973107`. Enthält lokale Profilanlage, Mathe- und Englisch-Cloud-Lernstand zwischen isolierten Browserprofilen, Englisch-Offline-Antwort mit Wiederverbindung ohne Duplikat, explizite Mathe-/Englisch-Migration aus lokalen CE-Testprofilen und Erhalt der Quellprofile.
+- Zusätzliche Regressionen verhindern, dass remote übertragene Zustands-Snapshots mit **weniger bisherigen Antworten** lokale Mathe-/Englisch-Lernstände zurücksetzen; Konflikt-Ereignis `hbg-cloud-conflict` wird ausgelöst. Dies ist nur eine konservative Sicherung, **keine vollständige Konfliktzusammenführung**. Gleichzeitige Bewertungen auf zwei Geräten bleiben Release-Blocker.
+- Browser-RPCs sind **gemockt**, daher kein Beleg für erfolgreiche echte Supabase-Übertragung oder reale physische Geräte.
+- Vercel-Preview war beim letzten Check noch auf älterem Commit `222018f`, nicht auf dem aktuellen Branch. Keinen veralteten Preview-Stand freigeben.
+- **Supabase-Auswirkung: ja.** Keine produktiven Datenbankänderungen oder Merge erfolgt.
