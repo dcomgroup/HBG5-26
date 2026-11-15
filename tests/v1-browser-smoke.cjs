@@ -33,6 +33,17 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   assert.match(await page.locator("#app").innerText(),new RegExp("Profil: "+chosen));
   await page.goto(base+"mathe/test-01/schnellcheck.html?p="+chosen);
   assert.match(await page.locator("#app").innerText(),new RegExp(chosen));
+  let reserves=0;
+  await local.route("https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/reserve_profile",async route=>{
+   reserves++;await route.fulfill({status:200,contentType:"application/json",body:'[{"reserved_slug":"test"}]'});
+  });
+  await page.goto(base);
+  await page.locator("#activate-cloud").click();
+  await page.locator("#cloud-activation button").first().click();
+  assert.equal(reserves,0,"name selection must not create cloud profile");
+  await page.getByRole("button",{name:"Ja, Cloud-Profil anlegen"}).click();
+  await page.locator("#profile-link").waitFor();
+  assert.equal(reserves,1,"cloud profile must be reserved exactly once after confirmation");
   await local.close();
 
   const slug="qa-cloud-profile",secret="a".repeat(64),events=[];
