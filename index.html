@@ -91,12 +91,12 @@ function showProfile(){
    document.getElementById("switch-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
    profileLinks();return;
   }
-  box.innerHTML='<strong>Lokales Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Dein Lernfortschritt wird nur in diesem Browser gespeichert. Dieses Profil wird noch nicht mit anderen Geräten synchronisiert.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testmodus öffnen</button></p><p class="hint">Cloud-Lernprofile werden derzeit im Entwicklungsbranch getestet.</p>';
+  box.innerHTML='<strong>Lokales Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Dein Lernfortschritt wird nur in diesem Browser gespeichert. Dieses Profil wird noch nicht mit anderen Geräten synchronisiert.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testmodus öffnen</button></p><p class="hint">Cloud-Lernprofile werden derzeit im Entwicklungsbranch getestet.</p><p><button id="activate-cloud" type="button">Cloud-Lernprofil aktivieren (Test)</button></p><div id="cloud-activation"></div>';
   document.getElementById("active-profile-name").textContent=activeProfile;
   document.getElementById("switch-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
   document.getElementById("demo-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
  }else{
-  box.innerHTML='<strong>Testmodus · nur auf diesem Gerät</strong><p class="hint">Du kannst alle Lernapps ausprobieren. Dein Lernfortschritt wird nur in diesem Browser gespeichert und nicht mit anderen Geräten synchronisiert.</p><h2>Lokales Lernprofil auswählen</h2><p class="hint">Du kannst ein lokales Profil anlegen. Ein Namensvorschlag allein legt noch kein Profil an.</p><div id="profile-choices"></div><p><button id="refresh-profiles" type="button">Andere Vorschläge</button></p><div id="profile-confirm" hidden><p><strong>Lokales Profil <span id="chosen-profile"></span> anlegen?</strong></p><p class="hint">Der Lernstand bleibt auf diesem Gerät. Es wird kein Cloud-Profil angelegt.</p><button id="confirm-profile" type="button">Lokales Profil anlegen</button> <button id="cancel-profile" type="button">Abbrechen</button></div><p class="error" id="profile-error" role="alert"></p><h2>Geräteübergreifend lernen</h2><p class="hint">Mit einem Cloud-Lernprofil kannst du später über einen persönlichen Link auf mehreren Geräten lernen. Die Aktivierung erfolgt ausdrücklich und erst nach der Supabase-Freigabe.</p><button type="button" disabled title="Nach der Supabase-Freigabe verfügbar">Cloud-Lernprofil aktivieren (demnächst)</button>';
+  box.innerHTML='<strong>Testmodus · nur auf diesem Gerät</strong><p class="hint">Du kannst alle Lernapps ausprobieren. Dein Lernfortschritt wird nur in diesem Browser gespeichert und nicht mit anderen Geräten synchronisiert.</p><h2>Lokales Lernprofil auswählen</h2><p class="hint">Du kannst ein lokales Profil anlegen. Ein Namensvorschlag allein legt noch kein Profil an.</p><div id="profile-choices"></div><p><button id="refresh-profiles" type="button">Andere Vorschläge</button></p><div id="profile-confirm" hidden><p><strong>Lokales Profil <span id="chosen-profile"></span> anlegen?</strong></p><p class="hint">Der Lernstand bleibt auf diesem Gerät. Es wird kein Cloud-Profil angelegt.</p><button id="confirm-profile" type="button">Lokales Profil anlegen</button> <button id="cancel-profile" type="button">Abbrechen</button></div><p class="error" id="profile-error" role="alert"></p><h2>Geräteübergreifend lernen</h2><p class="hint">Mit einem Cloud-Lernprofil kannst du später über einen persönlichen Link auf mehreren Geräten lernen. Die Aktivierung erfolgt ausdrücklich und erst nach der Supabase-Freigabe.</p><button type="button" id="activate-cloud">Cloud-Lernprofil aktivieren (Test)</button><div id="cloud-activation"></div>';
   const choices=document.getElementById("profile-choices"),confirmation=document.getElementById("profile-confirm");
   function drawSuggestions(){
    confirmation.hidden=true;choices.replaceChildren();
@@ -120,7 +120,50 @@ function showProfile(){
   document.getElementById("refresh-profiles").onclick=drawSuggestions;
   drawSuggestions();
  }
+ const cloudButton=document.getElementById("activate-cloud");
+ if(cloudButton)cloudButton.onclick=activateCloudUI;
  profileLinks();
+}
+function activateCloudUI(){
+ const holder=document.getElementById("cloud-activation");
+ if(!holder)return;
+ holder.replaceChildren();
+ const title=document.createElement("p");
+ title.textContent="Cloud-Profil ausdrücklich anlegen? Es wird dauerhaft in Supabase reserviert. Die Cloud-Funktion ist im Entwicklungsbranch noch im Test.";
+ const choices=document.createElement("div"),message=document.createElement("p");
+ message.className="error";
+ holder.append(title,choices,message);
+ freshSuggestions().forEach(slug=>{
+  const select=document.createElement("button");
+  select.type="button";select.textContent=slug;select.style.margin="0 8px 8px 0";
+  select.onclick=()=>{
+   choices.replaceChildren();
+   const confirmText=document.createElement("p");
+   confirmText.textContent="Cloud-Profil "+slug+" verbindlich reservieren?";
+   const confirmButton=document.createElement("button");
+   confirmButton.type="button";confirmButton.textContent="Ja, Cloud-Profil anlegen";
+   const cancelButton=document.createElement("button");
+   cancelButton.type="button";cancelButton.textContent="Abbrechen";
+   cancelButton.onclick=()=>{holder.replaceChildren()};
+   confirmButton.onclick=async()=>{
+    confirmButton.disabled=true;message.textContent="Profil wird reserviert …";
+    const bytes=crypto.getRandomValues(new Uint8Array(32));
+    const secret=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
+    try{
+     await reserveCloud(slug,secret);
+     localStorage.setItem(CLOUD_PREFIX+slug,secret);
+     activeProfile=slug;
+     history.replaceState(null,"",prefix+"?p="+encodeURIComponent(slug)+"#sync="+secret);
+     showProfile();
+    }catch{
+     message.textContent="Cloud-Profil konnte nicht angelegt werden. Bitte Verbindung prüfen oder einen neuen Namen wählen.";
+     confirmButton.disabled=false;
+    }
+   };
+   choices.append(confirmText,confirmButton,cancelButton);
+  };
+  choices.append(select);
+ });
 }
 showProfile();
 
