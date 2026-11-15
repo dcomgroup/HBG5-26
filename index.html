@@ -25,171 +25,62 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 <footer style="margin-top:48px;padding:20px 0;border-top:1px solid #dfe5ee"><h2>Lokale Lernstände sichern</h2><p class="meta">Exportiert die in diesem Browser gespeicherten Lernstände aller HBG5-26-Apps, einschließlich Latein. Die Daten bleiben hier erhalten. Der Export enthält keine Cloud-Zugangsschlüssel.</p><button id="export-local-learning" type="button" style="font:inherit;padding:11px 15px;border:1px solid #b9c5d6;border-radius:9px;background:#fff;cursor:pointer">Alle lokalen Lernstände exportieren (JSON)</button><p id="export-local-status" class="meta" role="status"></p></footer><script src="shared/export-local-learning.js"></script><script src="shared/cloud-transport.js"></script><script src="shared/migrate-local-v1.js"></script>
 <script>
 
-// Profiles are local until a remote sync backend is connected.
-const CLOUD_API="https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/reserve_profile";
+
+const CLOUD_API="https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/";
 const CLOUD_KEY="sb_publishable_PupDfjNg0FdAGU6yJsxeBg_kGYhgMAS";
-const CLOUD_PREFIX="hbg5-26-cloud-secret:";
-const validSecret=s=>/^[0-9a-f]{64}$/.test(s||"");
-function secretFor(slug){
- if(!slug)return null;
- const supplied=new URLSearchParams(location.hash.replace(/^#/,"")).get("sync");
- if(validSecret(supplied)){localStorage.setItem(CLOUD_PREFIX+slug,supplied);return supplied}
- const saved=localStorage.getItem(CLOUD_PREFIX+slug);
- return validSecret(saved)?saved:null;
-}
-async function reserveCloud(slug,secret){
- const response=await fetch(CLOUD_API,{method:"POST",headers:{apikey:CLOUD_KEY,"Content-Type":"application/json"},body:JSON.stringify({p_slug:slug,p_secret:secret}),cache:"no-store"});
- if(!response.ok)throw Error("Cloud reservation failed");
+const prefix="/HBG5-26/";
+const validSlug=s=>/^[a-z0-9][a-z0-9-]{2,63}$/.test(s||"");
+const requested=new URLSearchParams(location.search).get("p");
+let activeProfile=null;
+const box=document.getElementById("profile-box");
+async function rpc(name,data){
+ const response=await fetch(CLOUD_API+name,{method:"POST",headers:{apikey:CLOUD_KEY,"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store"});
+ if(!response.ok)throw Error("Cloud-Verbindung fehlgeschlagen");
  return response.json();
 }
-const verifiedCloud=new Set();
-const PROFILE_KEY="hbg5-26-active-profile";
-const prefix="/HBG5-26/";
-const params=new URLSearchParams(location.search);
-const rawPath=decodeURIComponent(location.pathname.startsWith(prefix)?location.pathname.slice(prefix.length):"").replace(/\/$/,"");
-const validSlug=v=>/^[a-z0-9][a-z0-9-]{2,23}$/.test(v);
-const fromLink=params.get("p")||rawPath;
-let activeProfile=validSlug(fromLink)?fromLink:null;
-const box=document.getElementById("profile-box");
 function profileLinks(){
- document.querySelectorAll(".exam a, .upcoming-item a").forEach(a=>{
+ document.querySelectorAll(".exam a,.upcoming-item a").forEach(a=>{
   const original=a.dataset.originalHref||(a.dataset.originalHref=a.getAttribute("href"));
-  const url=new URL(original,document.baseURI);
-  url.searchParams.delete("p");url.searchParams.delete("demo");url.hash="";
-  if(activeProfile){
-   const secret=secretFor(activeProfile);
-   if(secret&&!verifiedCloud.has(activeProfile))url.searchParams.set("demo","1");
-   else{
-    url.searchParams.set("p",activeProfile);
-    if(secret)url.hash="sync="+secret;
-   }
-  }else url.searchParams.set("demo","1");
-  a.href=url.href;
+  const u=new URL(original,document.baseURI);
+  u.searchParams.delete("p");u.searchParams.delete("demo");u.hash="";
+  if(activeProfile)u.searchParams.set("p",activeProfile);else u.searchParams.set("demo","1");
+  a.href=u.href;
  });
 }
-const RESERVED_PROFILES=new Set(["index","404","shared","mathe","deutsch","biologie","latein","englisch","test","demo","admin"]);
-const PROFILE_REGISTRY_KEY="hbg5-26-local-profile-names";
-const animals=["fuchs","otter","panda","eule","koala","tiger","dachs","falke","luchs","biber","milan","robbe"];
-function knownProfiles(){try{return JSON.parse(localStorage.getItem(PROFILE_REGISTRY_KEY)||"[]")}catch{return []}}
-function freshSuggestions(){
- const existing=new Set(knownProfiles());if(activeProfile)existing.add(activeProfile);
- const result=[];let attempts=0;
- while(result.length<3&&attempts++<40){
-  const bytes=new Uint8Array(4);crypto.getRandomValues(bytes);
-  const suffix=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
-  const name=animals[bytes[0]%animals.length]+"-"+suffix;
-  if(!existing.has(name)&&!result.includes(name))result.push(name);
- }
- return result;
-}
-function showProfile(){
- if(activeProfile){
-  localStorage.setItem(PROFILE_KEY,activeProfile);
-  const cloudSecret=secretFor(activeProfile);
-  if(cloudSecret){
-   box.innerHTML='<strong>Cloud-Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Persönlicher Link für mehrere Geräte. Wer diesen vollständigen Link besitzt, kann auf den Lernstand zugreifen. Nicht öffentlich teilen.</p><p><code id="profile-link"></code></p><p><button id="copy-profile">Persönlichen Link kopieren</button> <button id="switch-profile">Anderes Profil auswählen</button></p><p class="hint">Cloud-Synchronisierung im Test für Mathe, Schnellcheck, Deutsch, Biologie, Latein und Englisch.</p><div id="migration"></div>';
-   document.getElementById("active-profile-name").textContent=activeProfile;
-   const copyButton=document.getElementById("copy-profile");
-   copyButton.disabled=!verifiedCloud.has(activeProfile);
-   const status=document.createElement("p");status.setAttribute("role","status");
-   status.textContent=verifiedCloud.has(activeProfile)?"Cloud-Profil bestätigt.":"Cloud-Zugriff wird geprüft …";
-   box.append(status);
-   const personal=new URL(prefix,location.origin);personal.searchParams.set("p",activeProfile);personal.hash="sync="+cloudSecret;
-   document.getElementById("profile-link").textContent=personal.href;
-   document.getElementById("copy-profile").onclick=async()=>{try{await navigator.clipboard.writeText(personal.href)}catch{document.getElementById("profile-link").textContent=personal.href}};
-   document.getElementById("switch-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
-   if(verifiedCloud.has(activeProfile))window.HBG_V1_MIGRATE?.mount(document.getElementById("migration"));
-   else{
-    const checking=activeProfile,checkingSecret=cloudSecret;
-    fetch("https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/read_learning_events",{
-     method:"POST",headers:{apikey:CLOUD_KEY,"Content-Type":"application/json"},
-     body:JSON.stringify({p_slug:checking,p_secret:checkingSecret,p_app_id:"mathe"}),cache:"no-store"
-    }).then(r=>{if(!r.ok)throw Error("Unauthorized");return r.json()}).then(()=>{
-     if(activeProfile!==checking||secretFor(checking)!==checkingSecret)return;
-     verifiedCloud.add(checking);status.textContent="Cloud-Profil bestätigt.";
-     copyButton.disabled=false;
-     window.HBG_V1_MIGRATE?.mount(document.getElementById("migration"));
-     profileLinks();
-    }).catch(()=>{if(activeProfile===checking){status.textContent="Cloud-Zugriff nicht bestätigt. Bitte den vollständigen persönlichen Link erneut öffnen oder die Verbindung prüfen.";copyButton.disabled=true;}});
-   }
-   profileLinks();return;
-  }
-  box.innerHTML='<strong>Lokales Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Dein Lernfortschritt wird nur in diesem Browser gespeichert. Dieses Profil wird noch nicht mit anderen Geräten synchronisiert.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testmodus öffnen</button></p><p class="hint">Cloud-Lernprofile werden derzeit im Entwicklungsbranch getestet.</p><p><button id="activate-cloud" type="button">Cloud-Lernprofil aktivieren (Test)</button></p><div id="cloud-activation"></div>';
-  document.getElementById("active-profile-name").textContent=activeProfile;
-  document.getElementById("switch-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
-  document.getElementById("demo-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
- }else{
-  box.innerHTML='<strong>Testmodus · nur auf diesem Gerät</strong><p class="hint">Du kannst alle Lernapps ausprobieren. Dein Lernfortschritt wird nur in diesem Browser gespeichert und nicht mit anderen Geräten synchronisiert.</p><h2>Lokales Lernprofil auswählen</h2><p class="hint">Du kannst ein lokales Profil anlegen. Ein Namensvorschlag allein legt noch kein Profil an.</p><div id="profile-choices"></div><p><button id="refresh-profiles" type="button">Andere Vorschläge</button></p><div id="profile-confirm" hidden><p><strong>Lokales Profil <span id="chosen-profile"></span> anlegen?</strong></p><p class="hint">Der Lernstand bleibt auf diesem Gerät. Es wird kein Cloud-Profil angelegt.</p><button id="confirm-profile" type="button">Lokales Profil anlegen</button> <button id="cancel-profile" type="button">Abbrechen</button></div><p class="error" id="profile-error" role="alert"></p><h2>Geräteübergreifend lernen</h2><p class="hint">Mit einem Cloud-Lernprofil kannst du später über einen persönlichen Link auf mehreren Geräten lernen. Die Aktivierung ist derzeit nur im Entwicklungsbranch zum Testen verfügbar. Bestehende lokale Lernstände werden nicht automatisch übertragen.</p><button type="button" id="activate-cloud">Cloud-Lernprofil aktivieren (Test)</button><div id="cloud-activation"></div>';
-  const choices=document.getElementById("profile-choices"),confirmation=document.getElementById("profile-confirm");
-  function drawSuggestions(){
-   confirmation.hidden=true;choices.replaceChildren();
-   freshSuggestions().forEach(name=>{
-    const button=document.createElement("button");button.type="button";button.textContent=name;button.style.margin="0 8px 8px 0";
-    button.onclick=()=>{
-     document.getElementById("chosen-profile").textContent=name;
-     confirmation.hidden=false;
-     document.getElementById("confirm-profile").onclick=()=>{
-      if(!validSlug(name)||RESERVED_PROFILES.has(name)||knownProfiles().includes(name)){
-       document.getElementById("profile-error").textContent="Dieser Name ist bereits auf diesem Gerät vergeben. Bitte wähle einen anderen.";drawSuggestions();return;
-      }
-      const known=knownProfiles();known.push(name);localStorage.setItem(PROFILE_REGISTRY_KEY,JSON.stringify(known));
-      activeProfile=name;history.replaceState(null,"",prefix+"?p="+encodeURIComponent(name));showProfile();
-     };
-    };
-    choices.append(button);
-   });
-  }
-  document.getElementById("cancel-profile").onclick=()=>{confirmation.hidden=true};
-  document.getElementById("refresh-profiles").onclick=drawSuggestions;
-  drawSuggestions();
- }
- const cloudButton=document.getElementById("activate-cloud");
- if(cloudButton)cloudButton.onclick=activateCloudUI;
+function localView(missing=false){
+ activeProfile=null;
+ box.innerHTML='<strong>'+(missing?"Dieses Lernprofil gibt es nicht.":"Lokaler Lernmodus")+'</strong><p class="hint">Dein Lernfortschritt wird nur auf diesem Gerät gespeichert.</p><button id="new-cloud">Cloud-Lernprofil erstellen</button><div id="create-profile"></div>';
+ document.getElementById("new-cloud").onclick=()=>{
+  const target=document.getElementById("create-profile");
+  target.innerHTML='<p>Wähle einen Namen für dein Cloud-Lernprofil.</p><input id="cloud-name" placeholder="z. B. Panda" maxlength="16"><button id="create-cloud">Profil erstellen</button><p class="hint" id="cloud-message"></p>';
+  document.getElementById("create-cloud").onclick=async()=>{
+   const name=document.getElementById("cloud-name").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
+   const message=document.getElementById("cloud-message");
+   if(!validSlug(name)){message.textContent="Bitte mindestens drei Buchstaben eingeben.";return}
+   const bytes=crypto.getRandomValues(new Uint8Array(4));
+   const slug=name.slice(0,16)+"-"+Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
+   const button=document.getElementById("create-cloud");button.disabled=true;
+   try{await rpc("hbg_reserve_profile",{p_slug:slug});location.href=prefix+"?p="+encodeURIComponent(slug)}
+   catch{message.textContent="Das Profil konnte nicht angelegt werden.";button.disabled=false}
+  };
+ };
  profileLinks();
 }
-function activateCloudUI(){
- const holder=document.getElementById("cloud-activation");
- if(!holder)return;
- holder.replaceChildren();
- const title=document.createElement("p");
- title.textContent="Cloud-Profil ausdrücklich anlegen? Es wird dauerhaft in Supabase reserviert. Lokale Lernstände bleiben erhalten, werden aber noch nicht automatisch übertragen.";
- const choices=document.createElement("div"),message=document.createElement("p");
- message.className="error";
- holder.append(title,choices,message);
- freshSuggestions().forEach(slug=>{
-  const select=document.createElement("button");
-  select.type="button";select.textContent=slug;select.style.margin="0 8px 8px 0";
-  select.onclick=()=>{
-   choices.replaceChildren();
-   const confirmText=document.createElement("p");
-   confirmText.textContent="Cloud-Profil "+slug+" verbindlich reservieren?";
-   const confirmButton=document.createElement("button");
-   confirmButton.type="button";confirmButton.textContent="Ja, Cloud-Profil anlegen";
-   const cancelButton=document.createElement("button");
-   cancelButton.type="button";cancelButton.textContent="Abbrechen";
-   cancelButton.onclick=()=>{holder.replaceChildren()};
-   confirmButton.onclick=async()=>{
-    confirmButton.disabled=true;message.textContent="Profil wird reserviert …";
-    const bytes=crypto.getRandomValues(new Uint8Array(32));
-    const secret=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
-    try{
-     await reserveCloud(slug,secret);
-     localStorage.setItem(CLOUD_PREFIX+slug,secret);
-     activeProfile=slug;
-     history.replaceState(null,"",prefix+"?p="+encodeURIComponent(slug)+"#sync="+secret);
-     showProfile();
-    }catch{
-     message.textContent="Cloud-Profil konnte nicht angelegt werden. Bitte Verbindung prüfen oder einen neuen Namen wählen.";
-     confirmButton.disabled=false;
-    }
-   };
-   choices.append(confirmText,confirmButton,cancelButton);
-  };
-  choices.append(select);
- });
+async function initProfile(){
+ if(!requested||!validSlug(requested)){localView(!!requested);return}
+ box.innerHTML="<strong>Lernprofil wird geladen …</strong>";
+ try{
+  const exists=await rpc("hbg_profile_exists",{p_slug:requested});
+  if(!exists){localView(true);return}
+  activeProfile=requested;
+  box.innerHTML='<strong>Cloud-Lernprofil: <span id="profile-name"></span></strong><p class="hint">Dein Lernfortschritt wird geräteübergreifend gespeichert.</p><button id="copy-link">Profillink kopieren</button><div id="migration"></div>';
+  document.getElementById("profile-name").textContent=requested;
+  document.getElementById("copy-link").onclick=()=>navigator.clipboard.writeText(location.origin+prefix+"?p="+encodeURIComponent(requested));
+  window.HBG_V1_MIGRATE?.mount(document.getElementById("migration"));
+  profileLinks();
+ }catch{box.innerHTML='<strong>Cloud-Verbindung derzeit nicht verfügbar</strong><p class="hint">Bitte Verbindung prüfen und neu laden. Dein Lernstand bleibt erhalten.</p>';profileLinks()}
 }
-showProfile();
-
+void initProfile();
 const dayMs=86400000,weekday=['So','Mo','Di','Mi','Do','Fr','Sa'];
 function utcDay(y,m,d){return Date.UTC(y,m-1,d)/dayMs}
 function updateDates(){
