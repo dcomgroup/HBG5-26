@@ -1,3 +1,5 @@
+> **Verbindliche Korrektur 15.11.2026:** Alle nachfolgenden Verweise auf `#sync`, 64-stellige Geheimnisse, separate Profilschlüssel oder Tokenprüfung als Zugangsbedingung sind **überholt und aufgehoben**. Allein `?p=<profilkennung>` berechtigt zum Lesen und Schreiben des zugehörigen Cloud-Lernstands auf jedem Gerät. Vorrang hat `docs/PROJECT_RULES.md`, Abschnitt 9. Die bisherige Implementierung muss noch angepasst werden. Diese historischen Statusangaben sind keine geltenden Produktanforderungen.
+
 # V1.0 Supabase-Migration: Bestandsaufnahme und Arbeitsstand
 
 Stand 2026-11-15. **Nur Entwicklungsbranch, kein Produktiv-Rollout.**
