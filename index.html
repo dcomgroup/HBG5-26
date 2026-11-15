@@ -102,7 +102,7 @@ const [y,m,d]=card.dataset.date.split('-').map(Number),date=new Date(Date.UTC(y,
 const dateLabel=weekday[date.getUTCDay()]+', '+String(d).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y;
 const tentative=card.dataset.tentative==='1';
 const relative=delta<0?'vor '+(-delta)+' '+(delta===-1?'Tag':'Tagen'):delta===0?'heute':'in '+delta+' '+(delta===1?'Tag':'Tagen');
-card.querySelector('.meta').textContent=(delta<0?'🎉 Erledigt · ':'📅 ')+dateLabel+(tentative?' (voraussichtlich?)':'')+' · '+relative;
+card.querySelector('.meta').textContent=(delta<0?'🎉 Erledigt · ':'🗓️ ')+dateLabel+(tentative?' (voraussichtlich?)':'')+' · '+relative;
 if(delta<0)card.classList.add('done');
 });
 }
