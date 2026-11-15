@@ -72,3 +72,9 @@
 - Im Feature-Branch wurde ein weiterer Regressionstest ergänzt: Englisch-Offlinestand und Outbox müssen auch nach vollständigem Browser-Reload bestehen bleiben (Commit `7ba0891`). CI-Ergebnis für diesen Commit ist noch zu verifizieren.
 - **Wesentliche Migrationsgrenze:** Die App-Migration ist derzeit profilnamensgebunden. Ein vorhandenes lokales Profil `CE` wird nicht automatisch in ein neu erzeugtes Cloud-Profil `milan-…` übernommen. Automatisches Zusammenführen wäre wegen möglicher Verwechslung von Kinderprofilen unsicher. Für echte Altstände muss die Zuordnung ausdrücklich gewählt und der Bestand vorher gesichert werden.
 - **Erforderlicher Nutzernachweis für Gate 1:** Ein Browser mit realem Lernstand der bisherigen GitHub-Pages-App. Dort sind zunächst Profilnamen und Lernstände zu dokumentieren und zu sichern. Diese lokalen Daten sind aus GitHub und Supabase nicht auslesbar. Ohne diesen Schritt bleibt Gate 1 offen.
+
+## Zusätzliche automatisierte Absicherung (15.11.2026)
+
+- Feature-Branch: `tests/math-progress.cjs` ergänzt und in `.github/workflows/persistence-smoke.yml` aufgenommen. Prüft 33 Mathe-Aufgabentypen, grün/gelb/grau, Datumsanzeige und Erhalt alter Kartenzustände ohne Zeitstempel.
+- **Status:** Commit `606f1f73a5e7f49d627793d2bdd27420e86c4b26`; ein erfolgreicher CI-Lauf für diesen Commit ist noch **nicht** nachgewiesen. Daher keine Abnahme behaupten.
+- Der reale Altbestand eines produktiven Browsers kann von GitHub/Supabase aus nicht ermittelt werden. Für Gate 1 ist deshalb eine **einmalige Nutzeraktion im bislang genutzten Browser** nötig: lokale Daten vor Migration sichern bzw. die App dort mit dem vorgesehenen Cloud-Profil verknüpfen. Vorher keine Löschung von Website-Daten, kein Browserwechsel als Ersatz für den Altbrowser und kein Merge.
