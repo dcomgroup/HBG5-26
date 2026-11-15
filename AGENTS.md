@@ -7,3 +7,5 @@ For every app creation or modification, explicitly check and report whether Supa
 V1.0 new-app workflow: prototype without Supabase, iterate on UX, wait for explicit user approval, then connect persistence. Existing approved apps may be migrated separately without UI redesign. V2.0 architecture ideas belong to issue #10, not V1.0.
 
 Never claim deployment or data migration succeeded without verification. If you cannot read the rules, stop before modifying files.
+
+**Verbindlicher Profilzugriff, Vorrang vor alten Issues und Implementierungen:** Ausschließlich die Profil-URL `?p=<profilkennung>` berechtigt zum Lesen und Schreiben desselben Supabase-Lernstands auf allen Geräten. Kein `#sync`, kein weiterer Schlüssel, keine Anmeldung oder Freischaltung. Siehe Abschnitt 9 in `docs/PROJECT_RULES.md`. Ältere widersprechende Vorgaben nicht übernehmen.
