@@ -38,8 +38,14 @@ async function sync(){
   for(const row of rows){
    if(!/^en-\d{3}$/.test(row.card_id||""))continue;
    const state=row.event_data?.state,stamp=Date.parse(row.occurred_at);
+   if(readQueue().some(e=>e.cardId===row.card_id))continue;
    if(!state||!Number.isFinite(stamp))continue;
    const local=p.cards[row.card_id];
+   if(local && !local._cloudAt){
+    // Unmigrated local state must never be silently overwritten by cloud data.
+    window.dispatchEvent(new CustomEvent("hbg-cloud-migration-needed",{detail:{appId,cardId:row.card_id}}));
+    continue;
+   }
    if(!local||stamp>Number(local._cloudAt||0)){
     p.cards[row.card_id]={...state,_cloudAt:stamp};changed=true;
    }
