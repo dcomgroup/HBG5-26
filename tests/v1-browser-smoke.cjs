@@ -57,6 +57,7 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   const b=await other.newPage();
   await b.goto(base+"englisch/test-01/?p="+slug+"#sync="+secret);
   await b.getByRole("button",{name:"Runde starten"}).click();
+  await b.waitForFunction(slug=>{const d=JSON.parse(localStorage.getItem("hbg5-26-englisch-vocab")||"{}");return Object.values(d.profiles?.[slug]?.cards||{}).some(x=>x.right===1)},slug);
   const state=await b.evaluate(slug=>JSON.parse(localStorage.getItem("hbg5-26-englisch-vocab")).profiles[slug].cards,slug);
   assert.equal(Object.values(state).filter(x=>x.right===1).length,1);
   await other.close();
