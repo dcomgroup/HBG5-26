@@ -62,6 +62,7 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   const a=await cloud.newPage();
   await a.goto(base+"?p="+slug+"#sync="+secret);
   assert.match(await a.locator("#profile-box").innerText(),/Cloud-Lernprofil/);
+  await a.getByText("Cloud-Profil bestätigt.",{exact:true}).waitFor();
   const english=await a.locator('a[href*="englisch/test-01/"]').first().getAttribute("href");
   assert.ok(english.includes("#sync="+secret));
   await a.goto(english);
