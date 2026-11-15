@@ -15,6 +15,7 @@ function record(cardId,state){
  const at=new Date().toISOString(),event={id:crypto.randomUUID(),appId,cardId:String(cardId),data:{state:{...state}},at};
  localStorage.setItem(outboxKey,JSON.stringify([...queue(),event]));
  state._cloudAt=Date.parse(at);
+ state._cloudEventId=event.id;
  void sync({pushOnly:true});
  return event;
 }
@@ -61,8 +62,14 @@ async function sync(options={}){
      window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:id,reason:"divergent-equal-attempts"}}));
      continue;
     }
+    if(local&&local._cloudAt&&stamp>Number(local._cloudAt)&&
+       Number(state.right||0)+Number(state.wrong||0)===Number(local.right||0)+Number(local.wrong||0)&&
+       local._cloudEventId&&row.event_id&&local._cloudEventId!==row.event_id){
+     window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:id,reason:"concurrent-equal-count-events"}}));
+     continue;
+    }
     if(!local||stamp>Number(local._cloudAt||0)){
-     p.cards[id]={...state,_cloudAt:stamp};changed=true;
+     p.cards[id]={...state,_cloudAt:stamp,_cloudEventId:row.event_id||null};changed=true;
     }
    }
   }
