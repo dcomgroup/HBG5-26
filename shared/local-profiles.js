@@ -3,6 +3,7 @@
 const root=document.getElementById("local-profile-manager");
 if(!root)return;
 const SELECT="hbg5-26-selected-local-profile";
+const REGISTRY="hbg5-26-local-profile-names-v1";
 const parse=k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}};
 const add=(set,v)=>{if(typeof v==="string"&&v.trim()&&v!=="__demo__")set.add(v.trim())};
 function names(){
@@ -13,6 +14,8 @@ function names(){
  for(const p of Object.values(d?.profiles||{}))add(set,p?.profile);
  for(const p of b||[])add(set,p);
  add(set,localStorage.getItem("hbg5-26-latein-profile"));
+ for(const p of parse(REGISTRY)||[])add(set,p);
+ add(set,selected());
  return [...set].sort((a,b)=>a.localeCompare(b,"de"));
 }
 function selected(){return localStorage.getItem(SELECT)||""}
@@ -24,29 +27,58 @@ function setLinks(){
   a.href=url.href;
  });
 }
+function remember(name){
+ const entries=new Set(parse(REGISTRY)||[]);entries.add(name);
+ localStorage.setItem(REGISTRY,JSON.stringify([...entries]));
+}
+function choose(name){
+ localStorage.setItem(SELECT,name);remember(name);
+ render();setLinks();window.dispatchEvent(new Event("hbg-local-profile-changed"));
+}
 function render(){
  const items=names(),current=selected();
  root.replaceChildren();
- const heading=document.createElement("h3");heading.textContent="Lokale Lernprofile";root.append(heading);
- const label=document.createElement("label");label.textContent="Aktives lokales Profil ";
- const select=document.createElement("select");select.id="local-profile-select";
- const empty=document.createElement("option");empty.value="";empty.textContent="In der Lernapp auswählen";select.append(empty);
- for(const name of items){const option=document.createElement("option");option.value=option.textContent=name;select.append(option)}
- select.value=items.includes(current)?current:"";
- label.append(select);root.append(label);
- const buttons=document.createElement("div");buttons.style.marginTop="12px";
- const create=document.createElement("button");create.textContent="Lokales Profil anlegen";
- const remove=document.createElement("button");remove.textContent="Lernstand dieses Profils löschen";remove.style.marginLeft="8px";remove.disabled=!select.value;
- buttons.append(create,remove);root.append(buttons);
- const message=document.createElement("p");message.className="hint";root.append(message);
- select.onchange=()=>{if(select.value)localStorage.setItem(SELECT,select.value);else localStorage.removeItem(SELECT);remove.disabled=!select.value;setLinks();};
- create.onclick=()=>{const name=prompt("Name für das neue lokale Profil:")?.trim();if(!name)return;if(name.length>40){message.textContent="Maximal 40 Zeichen.";return}localStorage.setItem(SELECT,name);render();setLinks();};
- remove.onclick=async()=>{
-  const name=select.value;if(!name)return;
-  if(!confirm('Lokale Lernstände von "'+name+'" in allen Lernapps auf diesem Gerät dauerhaft löschen? Cloud-Daten bleiben erhalten.'))return;
-  if(!confirm('Wirklich löschen? Bitte vorher bei Bedarf alle lokalen Lernstände exportieren.'))return;
-  try{await erase(name);if(selected()===name)localStorage.removeItem(SELECT);render();setLinks();location.reload()}catch(err){message.textContent="Löschen fehlgeschlagen: "+err.message}
+ const heading=document.createElement("h3");heading.textContent="Lokales Lernprofil";root.append(heading);
+ if(!current){
+  const promptText=document.createElement("p");promptText.textContent="Wie heißt du? Lege ein Profil an, damit deine Lernstände gespeichert werden.";root.append(promptText);
+ }else{
+  const currentText=document.createElement("p");currentText.textContent="Aktuell ausgewähltes Profil: "+current;root.append(currentText);
+ }
+ if(items.length){
+  const label=document.createElement("label");label.textContent="Profil wechseln ";
+  const select=document.createElement("select");select.id="local-profile-select";
+  const empty=document.createElement("option");empty.value="";empty.textContent="Profil auswählen";select.append(empty);
+  for(const name of items){const option=document.createElement("option");option.value=option.textContent=name;select.append(option)}
+  select.value=items.includes(current)?current:"";
+  select.onchange=()=>{if(select.value)choose(select.value)};
+  label.append(select);root.append(label);
+ }
+ const form=document.createElement("form");form.style.marginTop="14px";
+ const input=document.createElement("input");input.placeholder="Dein Name";input.maxLength=40;input.required=true;input.setAttribute("aria-label","Name für neues Profil");input.style.maxWidth="100%";
+ const create=document.createElement("button");create.type="submit";create.textContent="Neues Profil anlegen";create.style.marginLeft="6px";
+ form.append(input,create);root.append(form);
+ const message=document.createElement("p");message.className="hint";message.setAttribute("role","status");root.append(message);
+ form.onsubmit=e=>{
+  e.preventDefault();const name=input.value.trim();
+  if(!name||name.length>40)return;
+  if(names().some(n=>n.toLocaleLowerCase("de")===name.toLocaleLowerCase("de"))){message.textContent="Dieses Profil gibt es bereits. Bitte über das Dropdown auswählen.";return}
+  choose(name);
  };
+ if(current){
+  const remove=document.createElement("button");remove.textContent="Profil und lokale Lernstände löschen";remove.style.marginTop="12px";remove.style.background="#fff";remove.style.color="#9b1c1c";remove.style.borderColor="#c98a8a";root.append(remove);
+  remove.onclick=async()=>{
+   if(!confirm('Das lokale Profil "'+current+'" und seine Lernstände in allen Lernapps auf diesem Gerät löschen? Cloud-Daten bleiben erhalten.'))return;
+   if(!confirm('Wirklich dauerhaft löschen? Bei Bedarf vorher die lokalen Lernstände exportieren.'))return;
+   remove.disabled=true;
+   try{
+    await erase(current);
+    const entries=(parse(REGISTRY)||[]).filter(n=>n!==current);
+    localStorage.setItem(REGISTRY,JSON.stringify(entries));
+    localStorage.removeItem(SELECT);
+    location.reload();
+   }catch(err){remove.disabled=false;message.textContent="Löschen fehlgeschlagen: "+err.message}
+  };
+ }
  setLinks();
 }
 async function erase(name){
@@ -70,5 +102,5 @@ async function erase(name){
  });
  if(localStorage.getItem("hbg5-26-latein-profile")===name)localStorage.removeItem("hbg5-26-latein-profile");
 }
-window.HBG_LOCAL_PROFILES={mount:render,links:setLinks};
+window.HBG_LOCAL_PROFILES={mount:render,links:setLinks,selected};
 })();
