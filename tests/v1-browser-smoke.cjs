@@ -29,7 +29,7 @@ const base="http://127.0.0.1:8765/HBG5-26/";
 
   const slug="qa-cloud-profile",secret="a".repeat(64),events=[];
   const cloud=await browser.newContext();
-  await cloud.route("https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/**",async route=>{
+  const installRoute=async ctx=>ctx.route("https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/**",async route=>{
    const name=route.request().url().split("/").pop(),p=route.request().postDataJSON();
    if(p.p_slug!==slug||p.p_secret!==secret){await route.fulfill({status:403,body:"{}"});return}
    if(name==="read_learning_events"){await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(events)});return}
@@ -39,6 +39,7 @@ const base="http://127.0.0.1:8765/HBG5-26/";
    }
    await route.fulfill({status:404,body:"{}"});
   });
+  await installRoute(cloud);
   const a=await cloud.newPage();
   await a.goto(base+"?p="+slug+"#sync="+secret);
   assert.match(await a.locator("#profile-box").innerText(),/Cloud-Lernprofil/);
@@ -51,11 +52,14 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   await a.getByRole("button",{name:"Gewusst",exact:true}).click();
   await a.waitForFunction(()=>JSON.parse(localStorage.getItem("hbg5-26-englisch-outbox:qa-cloud-profile")||"[]").length===0);
   assert.equal(events.length,1);
-  const b=await cloud.newPage();
+  const other=await browser.newContext();
+  await installRoute(other);
+  const b=await other.newPage();
   await b.goto(base+"englisch/test-01/?p="+slug+"#sync="+secret);
   await b.getByRole("button",{name:"Runde starten"}).click();
   const state=await b.evaluate(slug=>JSON.parse(localStorage.getItem("hbg5-26-englisch-vocab")).profiles[slug].cards,slug);
   assert.equal(Object.values(state).filter(x=>x.right===1).length,1);
+  await other.close();
   await cloud.close();
   console.log("PASS: browser local profile confirmation, Math/English handoff, cloud link and A-to-B sync");
  }finally{await browser.close()}
