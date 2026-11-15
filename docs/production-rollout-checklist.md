@@ -85,3 +85,15 @@
 
 - Playwright-Regressionstest für die Mathe-Anzeige ergänzt: 33 Aufgabentypen, ein aktuell sicherer, ein abgelaufener und ein altes Profil ohne Zeitstempel. Erwartung: 1/33 sicher und 2 fällig. Commit `2fa8b7b` auf dem Feature-Branch. **CI-Ergebnis noch ausstehend.**
 - Issue #7 dokumentiert die fehlende sichere Zuordnung eines bestehenden lokalen Profils zu einem neuen Cloud-Profil. Vor Gate 1 ist ein expliziter, verlustfreier Migrationsweg erforderlich.
+
+
+## Fortschrittsprüfung nach Panda-Import (15.11.2026)
+
+- **Echter Mathe-Altstand übernommen und in Supabase geprüft:** Profil `panda-7a683212`, 31 Kartenereignisse plus 1 Summenereignis, 5 Runden, 40 Antworten, 35 richtig und 5 falsch. Das frühere lokale Profil `CE` blieb bestehen. Kein Zugangsschlüssel in dieser Dokumentation.
+- **Gate 1 weiterhin offen:** Der direkte SQL-Import belegt die Datenübernahme, aber nicht, dass die Produktiv-App den Stand auf einem zweiten Gerät lädt, neue Antworten dauerhaft schreibt, Offline-Neustarts nachholt und bei Konflikten korrekt zusammenführt.
+- **Branch-Divergenz festgestellt:** `main` und `feature/persistence-integration-20261115` sind auseinander gelaufen (Vergleich 15.11.: Feature 68 Commits voraus, 13 hinter `main`). Auf `main` wurden inzwischen u. a. Export und Mathe-Schnellcheck geändert. **PR #1 darf nicht blind gemergt werden**, weil dabei neue Produktivänderungen überschrieben oder unbeabsichtigte UX-Änderungen mitgerollt werden könnten.
+- **Nächster technischer Schritt:** Feature auf aktuellen `main`-Stand integrieren, Konflikte ausdrücklich auflösen, neuen gemeinsamen Commit vollständig testen, echte Panda-Geräte-/Offline-Abnahme nachweisen. Erst danach Gate 1/2 freigeben und PR #1 mergen.
+- **Rollback-Referenz vor der Integration:** `main` = `5b7d6483c4461d6e09969c493204d6ebe72c041b`. Vor dem tatsächlichen Merge den dann aktuellen `main`-Commit erneut notieren.
+- Mathe-Schnellcheck auf `main` speichert seinen Fortschritt weiterhin separat lokal. Er ist **noch nicht** durch die Cloud-Integration von Mathe Test 1 abgedeckt.
+
+**Status:** Kein Merge durchgeführt; alle weiteren Issues bleiben nach der verbindlichen Reihenfolge hinter der Cloud-Abnahme.
