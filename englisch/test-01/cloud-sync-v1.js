@@ -11,7 +11,7 @@ const slug=credentials.slug;
 const outboxKey="hbg5-26-englisch-outbox:"+slug;
 const stateKey="hbg5-26-englisch-vocab";
 const appId="englisch";
-let syncing=false;
+let syncing=false, syncAgain=false;
 const readLocal=()=>{try{return JSON.parse(localStorage.getItem(stateKey))||{profiles:{}}}catch{return{profiles:{}}}};
 const readQueue=()=>{try{const x=JSON.parse(localStorage.getItem(outboxKey)||"[]");return Array.isArray(x)?x:[]}catch{return[]}};
 function enqueue(cardId,state){
@@ -22,7 +22,7 @@ function enqueue(cardId,state){
  return event;
 }
 async function sync(){
- if(syncing)return false;
+ if(syncing){syncAgain=true;return false;}
  syncing=true;
  try{
   const queue=readQueue();
@@ -56,7 +56,7 @@ async function sync(){
  }catch{
   window.dispatchEvent(new CustomEvent("hbg-cloud-pending",{detail:{appId}}));
   return false;
- }finally{syncing=false}
+ }finally{syncing=false;if(syncAgain){syncAgain=false;queueMicrotask(()=>void sync());}}
 }
 function record(cardId,state){
  const event=enqueue(cardId,state);
