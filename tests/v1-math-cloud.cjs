@@ -61,5 +61,12 @@ assert.equal(cloud.enabled,true);
  p=JSON.parse(localStorage.getItem(key)).profiles[slug];
  assert.equal(p.answers,40,"lower remote totals must not erase prior Math answers");
  assert.equal(p.rounds,5,"lower remote totals must not erase prior Math rounds");
+ // Identical correct/wrong counts can still represent two independent answers.
+ p.cards["0"]={level:2,right:5,wrong:2,_cloudAt:Date.parse("2026-11-15T12:00:00Z"),_cloudEventId:"local-event"};
+ localStorage.setItem(key,JSON.stringify({profiles:{[slug]:p}}));
+ events.push({event_id:"other-device-same-result",card_id:"0",event_data:{state:{level:1,right:5,wrong:2}},occurred_at:"2026-11-15T19:00:00Z"});
+ await cloud.sync();
+ p=JSON.parse(localStorage.getItem(key)).profiles[slug];
+ assert.equal(p.cards["0"].level,2,"distinct same-count events must not overwrite local Math card");
  console.log("PASS: Math Panda import replay, offline queue, idempotency and local data protection");
 })().catch(e=>{console.error(e);process.exitCode=1});
