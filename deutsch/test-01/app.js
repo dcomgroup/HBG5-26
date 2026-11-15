@@ -98,7 +98,14 @@ if(opts){document.querySelectorAll(".option").forEach(b=>{b.onclick=()=>{if(chec
 if(checked){$("feedback").innerHTML='<p class="'+(correct?"good":"bad")+'">'+(correct?"✓ Richtig!":"✗ Richtige Antwort: "+esc(q[1]))+'</p><p>'+esc(q[3])+'</p>';document.querySelectorAll(".option").forEach(b=>{b.disabled=true;b.classList.toggle("good",b.dataset.value===q[1]);b.classList.toggle("bad",b.dataset.value===answer&&!correct)});if($("typed"))$("typed").disabled=true}
 $("action").onclick=()=>{if(checked)next();else if(answer.trim())check()};}
 async function initCloud(){
- if(!cloud?.enabled){render();return}
+ if(!cloud?.enabled){
+  const routed=new URLSearchParams(location.search).get("p");
+  if(routed&&/^[a-z0-9][a-z0-9-]{2,63}$/.test(routed)){
+   active=key(routed);if(!profiles[active])profiles[active]=blank(routed);
+   data=profiles[active];persist();
+  }
+  render();return;
+ }
  active=cloud.slug;
  if(!profiles[active])profiles[active]=blank(active);
  data=profiles[active];persist();
