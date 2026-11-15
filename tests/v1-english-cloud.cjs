@@ -56,5 +56,12 @@ localStorage.setItem(key,JSON.stringify({profiles:{[slug]:{cards:{"en-001":{righ
  await adapter.sync();
  assert.equal(JSON.parse(localStorage.getItem(key)).profiles[slug].cards["en-002"].right,4,
   "equal-attempt divergent remote snapshot must not erase local card");
+ const same=JSON.parse(localStorage.getItem(key)).profiles[slug].cards;
+ same["en-002"]={right:4,wrong:2,streak:2,_cloudAt:Date.parse("2026-11-15T12:00:00Z"),_cloudEventId:"local-event"};
+ localStorage.setItem(key,JSON.stringify({profiles:{[slug]:{cards:same}}}));
+ events.push({event_id:"other-device-same-result",card_id:"en-002",event_data:{state:{right:4,wrong:2,streak:0}},occurred_at:"2026-11-15T19:00:00Z"});
+ await adapter.sync();
+ assert.equal(JSON.parse(localStorage.getItem(key)).profiles[slug].cards["en-002"].streak,2,
+  "distinct same-count events must not overwrite local English card");
  console.log("PASS: English cloud offline queue, idempotent retry, local migration protection");
 })().catch(e=>{console.error(e);process.exitCode=1});
