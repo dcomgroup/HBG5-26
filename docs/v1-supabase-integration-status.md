@@ -25,3 +25,15 @@ Stand 2026-11-15. **Nur Entwicklungsbranch, kein Produktiv-Rollout.**
 
 ## Supabase-Auswirkungscheck
 **Ja**: geplante Änderungen betreffen Profilzuordnung, Speichern/Laden, Offline-Synchronisierung und Migration. Rückwärtskompatibilität und Erhalt vorhandener Lernstände sind Release-Blocker. Noch keine Änderungen an produktiver App oder Datenbank vorgenommen.
+
+## Implementierungsfortschritt (15.11.2026)
+- Draft-PR #12 aus freigegebener V1-Basis, **kein Merge**.
+- `shared/cloud-transport.js`: RPC-Transport mit Profil-Link-Geheimnis und ausschließlich öffentlichen Publishable Keys.
+- `englisch/test-01/cloud-sync-v1.js`: optionale Cloud-Synchronisierung, Offline-Outbox, wiederholbare Event-IDs, Schutz unübernommener lokaler Karten. Freigegebene Karteikarten-UX bleibt unverändert.
+- `mathe/test-01/cloud-sync-v1.js`: optionale Cloud-Synchronisierung kompatibel mit bereits vorhandenen `mathe`-Events und `__totals__` des Panda-Profils; keine erneute CE-Importaktion.
+- Startseite auf **Entwicklungsbranch**: zwei Bestätigungsschritte vor Cloud-Reservierung, Cloud-Profillink kopierbar, lokaler Testmodus weiter verfügbar, App-Links ohne alte Profil-/Demo-Parameter und nur mit aktuellem Sync-Fragment.
+- Mathe und Englisch übernehmen auf dem Entwicklungsbranch den von der Startseite gewählten Profilnamen automatisch; keine erneute Namenseingabe beim Öffnen. Andere Apps stehen noch aus.
+- CI: statische Syntaxprüfungen und Node-Regressionstests für Cloud-Transport, Englisch-Offline-Outbox und Math-Panda-Datenkompatibilität. CI-Ergebnisse pro Commit in PR #12 einsehen. Browser-E2E und reale Zwei-Geräte-Abnahme stehen noch aus.
+- Datenbankfunktionen geprüft: `reserve_profile` nutzt atomare eindeutige Slug-Reservierung; `append_learning_event` und `read_learning_events` verifizieren Slug und SHA-256-Hash des 64-stelligen Geheimnisses, verwenden festes `search_path` und begrenzen Nutzdaten. Öffentlich ausführbare SECURITY-DEFINER-RPCs bleiben als Sicherheits-/Missbrauchsrisiko (insbesondere Profil-Reservierungs-Spam und fehlende Rate-Limits) vor Rollout zu bewerten. Keine Datenbankänderung erfolgt.
+- **Bekannte Grenze:** Beim parallelen Lernen auf mehreren Geräten werden momentan Zustands-Snapshots anhand von Zeitstempeln abgeglichen. Bei gleichzeitigem Bearbeiten derselben Karte kann Lernhistorie verloren gehen. Vor Freigabe gezielte Konflikt-Tests und Lösung erforderlich.
+- **Supabase-Auswirkung: ja** (Profilaktivierung, Cloud-Event-Sync und Offline-Puffer). Produktivversion und Cloud-Daten unverändert.
