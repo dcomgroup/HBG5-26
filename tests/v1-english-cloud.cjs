@@ -21,6 +21,7 @@ const context={
   if(url.endsWith("read_learning_events"))return{ok:true,json:async()=>events};
   throw Error("unexpected RPC");
  }};
+window.fetch=context.fetch;
 vm.runInNewContext(fs.readFileSync("shared/cloud-transport.js","utf8"),context);
 vm.runInNewContext(fs.readFileSync("englisch/test-01/cloud-sync-v1.js","utf8"),context);
 const adapter=window.HBG_ENGLISH_CLOUD;
