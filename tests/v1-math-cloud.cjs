@@ -55,5 +55,11 @@ assert.equal(cloud.enabled,true);
  await cloud.sync();
  p=JSON.parse(localStorage.getItem(key)).profiles[slug];
  assert.equal(p.cards["0"].right,5,"equal-attempt divergent snapshot must not erase local card");
+ // An offline device must not overwrite higher accumulated totals with a later timestamp.
+ events.push({event_id:"regressed-totals",card_id:"__totals__",event_data:{state:{rounds:2,answers:15}},occurred_at:"2026-11-15T18:00:00Z"});
+ await cloud.sync();
+ p=JSON.parse(localStorage.getItem(key)).profiles[slug];
+ assert.equal(p.answers,40,"lower remote totals must not erase prior Math answers");
+ assert.equal(p.rounds,5,"lower remote totals must not erase prior Math rounds");
  console.log("PASS: Math Panda import replay, offline queue, idempotency and local data protection");
 })().catch(e=>{console.error(e);process.exitCode=1});
