@@ -32,7 +32,7 @@ const api=window.HBG_V1_MIGRATE,creds=window.HBG_CLOUD_TRANSPORT.credentials(con
  const names=await api.sources();assert.ok(names.includes(source));
  const {key,plan}=await api.prepare(source,creds);
  assert.equal(plan.skipped,0);
- assert.equal(plan.events.length,7); // Math 2, Schnellcheck 2, English 1, German 2, Bio 1 = 8
+ assert.equal(plan.events.length,8); // Math 2, Schnellcheck 2, English 1, German 2, Bio 1
  online=false;await assert.rejects(()=>api.execute(key,creds));
  online=true;const result=await api.execute(key,creds);
  assert.equal(result.imported,plan.events.length);
