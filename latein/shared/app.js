@@ -6,7 +6,8 @@ const urlProfile=new URLSearchParams(location.search).get("p");
 const fixedProfile=urlProfile&&/^[a-z0-9][a-z0-9-]{2,63}$/.test(urlProfile)?urlProfile:null;
 const demoMode=new URLSearchParams(location.search).get("demo")==="1";
 const cloud=window.HBG_LATIN_CLOUD;
-let db=null,profile=fixedProfile|| (demoMode?"__demo__":localStorage.getItem(keyProfile)||"MB"),mode="current",kind="translation",queue=[],index=0,again=[],shown=false,done=0;
+const localFromHome=!fixedProfile?new URLSearchParams(location.search).get("local"):null;
+let db=null,profile=fixedProfile|| (localFromHome&&localFromHome.length<=40?localFromHome:demoMode?"__demo__":localStorage.getItem(keyProfile)||"MB"),mode="current",kind="translation",queue=[],index=0,again=[],shown=false,done=0;
 const all=new Map();for(const [t,arr] of Object.entries(data))for(const [latin,german,grammar] of arr){let id=latin.normalize("NFC").toLowerCase().replace(/\\s+/g," ").trim();if(!all.has(id))all.set(id,{id,latin,german,grammar,tests:[t]});else{let x=all.get(id);x.tests.push(t);if(t==="test02"&&grammar!=="Wiederholung")x.grammar=grammar;}}
 function open(){return new Promise(resolve=>{if(!("indexedDB" in window)){resolve(null);return}const r=indexedDB.open(DBNAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)})}
 async function read(){if(!db)return {};return new Promise(resolve=>{let tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).get(profile);r.onsuccess=()=>resolve(r.result||{});r.onerror=()=>resolve({})})}
