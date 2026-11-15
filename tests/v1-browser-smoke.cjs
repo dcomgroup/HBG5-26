@@ -107,6 +107,7 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   // A second answer during a network outage must remain in the local outbox,
   // then upload exactly once when connectivity returns.
   await cloud.setOffline(true);
+  await a.getByRole("button",{name:"Weiter",exact:true}).click();
   await a.getByRole("button",{name:"Lösung aufdecken"}).click();
   await a.getByRole("button",{name:"Gewusst",exact:true}).click();
   await a.waitForFunction(()=>JSON.parse(localStorage.getItem("hbg5-26-englisch-outbox:qa-cloud-profile")||"[]").length===1);
