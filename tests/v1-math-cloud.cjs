@@ -47,5 +47,13 @@ assert.equal(cloud.enabled,true);
  await cloud.sync();
  p=JSON.parse(localStorage.getItem(key)).profiles[slug];
  assert.equal(p.cards["0"].right,8,"remote lower attempt count must not regress local card");
+ // Two devices may report the same total attempts but disagree on correct/wrong.
+ // Preserve the local card and surface the conflict for manual resolution.
+ p.cards["0"]={level:2,right:5,wrong:2,_cloudAt:Date.parse("2026-11-15T12:00:00Z")};
+ localStorage.setItem(key,JSON.stringify({profiles:{[slug]:p}}));
+ events.push({event_id:"divergent-device",card_id:"0",event_data:{state:{level:1,right:4,wrong:3}},occurred_at:"2026-11-15T17:00:00Z"});
+ await cloud.sync();
+ p=JSON.parse(localStorage.getItem(key)).profiles[slug];
+ assert.equal(p.cards["0"].right,5,"equal-attempt divergent snapshot must not erase local card");
  console.log("PASS: Math Panda import replay, offline queue, idempotency and local data protection");
 })().catch(e=>{console.error(e);process.exitCode=1});
