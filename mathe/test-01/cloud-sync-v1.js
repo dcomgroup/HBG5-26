@@ -49,6 +49,12 @@ async function sync(options={}){
      window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:id,reason:"remote-attempt-count-regressed"}}));
      continue;
     }
+    if(local&&local._cloudAt&&stamp>Number(local._cloudAt)&&
+       Number(state.right||0)+Number(state.wrong||0)===Number(local.right||0)+Number(local.wrong||0)&&
+       (Number(state.right||0)!==Number(local.right||0)||Number(state.wrong||0)!==Number(local.wrong||0))){
+     window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:id,reason:"divergent-equal-attempts"}}));
+     continue;
+    }
     if(!local||stamp>Number(local._cloudAt||0)){
      p.cards[id]={...state,_cloudAt:stamp};changed=true;
     }
