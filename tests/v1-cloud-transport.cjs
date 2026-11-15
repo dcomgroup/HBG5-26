@@ -28,6 +28,6 @@ const client=api.createClient(creds,async (url,options)=>{calls.push({url,option
  await client.append({id:"11111111-1111-4111-8111-111111111111",appId:"mathe",cardId:"1",data:{level:2},at:"2026-11-15T00:00:00Z"});
  assert.match(calls[1].url,/append_learning_event$/);
  assert.equal(JSON.parse(calls[1].options.body).p_card_id,"1");
- await assert.rejects(()=>client.append({id:"invalid"}),/Invalid event id/);
+ assert.throws(()=>client.append({id:"invalid"}),/Invalid event id/);
  console.log("PASS: cloud transport profile isolation, credentials and RPC payloads");
 })().catch(e=>{console.error(e);process.exitCode=1});
