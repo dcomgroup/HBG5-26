@@ -12,9 +12,9 @@ function names(){
  for(const p of Object.keys(q||{}))add(set,p);
  for(const p of Object.keys(e?.profiles||{}))add(set,p);
  for(const p of Object.values(d?.profiles||{}))add(set,p?.profile);
- for(const p of b||[])add(set,p);
+ for(const p of Array.isArray(b)?b:[])add(set,p);
  add(set,localStorage.getItem("hbg5-26-latein-profile"));
- for(const p of parse(REGISTRY)||[])add(set,p);
+ for(const p of Array.isArray(parse(REGISTRY))?parse(REGISTRY):[])add(set,p);
  add(set,selected());
  return [...set].sort((a,b)=>a.localeCompare(b,"de"));
 }
@@ -28,7 +28,7 @@ function setLinks(){
  });
 }
 function remember(name){
- const entries=new Set(parse(REGISTRY)||[]);entries.add(name);
+ const stored=parse(REGISTRY);const entries=new Set(Array.isArray(stored)?stored:[]);entries.add(name);
  localStorage.setItem(REGISTRY,JSON.stringify([...entries]));
 }
 function choose(name){
