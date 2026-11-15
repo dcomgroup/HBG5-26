@@ -66,3 +66,9 @@
 - Die automatisierte Migration prüft **nur Englisch und simulierte lokale Bestandsdaten**, nicht die realen lokalen Browserstände des Nutzers. Diese Daten liegen ausschließlich im jeweiligen Browser und können nicht über GitHub oder Supabase ausgelesen werden, solange sie noch nicht migriert wurden.
 - Das Feature enthält außerdem bereits eine erste Umsetzung von Issue #6 (zeitabhängiger Mathe-Fortschritt); vor einem reinen Persistenz-Rollout muss deren Aufnahme ausdrücklich geprüft oder die Änderung getrennt werden.
 - **Entscheidung:** Kein Merge, bevor Gate 1 vollständig nachgewiesen und dokumentiert ist. Die nächste fehlende externe Evidenz ist eine Bestandsaufnahme in einem bereits verwendeten Produktiv-Browser; kein Löschen von Browserdaten.
+
+## Zusätzliche Absicherung (15.11.2026)
+
+- Im Feature-Branch wurde ein weiterer Regressionstest ergänzt: Englisch-Offlinestand und Outbox müssen auch nach vollständigem Browser-Reload bestehen bleiben (Commit `7ba0891`). CI-Ergebnis für diesen Commit ist noch zu verifizieren.
+- **Wesentliche Migrationsgrenze:** Die App-Migration ist derzeit profilnamensgebunden. Ein vorhandenes lokales Profil `CE` wird nicht automatisch in ein neu erzeugtes Cloud-Profil `milan-…` übernommen. Automatisches Zusammenführen wäre wegen möglicher Verwechslung von Kinderprofilen unsicher. Für echte Altstände muss die Zuordnung ausdrücklich gewählt und der Bestand vorher gesichert werden.
+- **Erforderlicher Nutzernachweis für Gate 1:** Ein Browser mit realem Lernstand der bisherigen GitHub-Pages-App. Dort sind zunächst Profilnamen und Lernstände zu dokumentieren und zu sichern. Diese lokalen Daten sind aus GitHub und Supabase nicht auslesbar. Ohne diesen Schritt bleibt Gate 1 offen.
