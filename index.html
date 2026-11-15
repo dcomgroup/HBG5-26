@@ -25,6 +25,22 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 <script>
 
 // Profiles are local until a remote sync backend is connected.
+const CLOUD_URL="https://velspjtxenbvvwgptahh.supabase.co";
+const CLOUD_KEY="sb_publishable_PupDfjNg0FdAGU6yJsxeBg_kGYhgMAS";
+const CLOUD_PREFIX="hbg5-26-cloud-secret:";
+const validSecret=s=>/^[0-9a-f]{64}$/.test(s||"");
+const hashSecret=()=>new URLSearchParams(location.hash.replace(/^#/,"")).get("sync");
+function secretFor(slug){
+ const incoming=hashSecret();
+ if(validSecret(incoming)&&slug){localStorage.setItem(CLOUD_PREFIX+slug,incoming);return incoming}
+ const saved=localStorage.getItem(CLOUD_PREFIX+slug);
+ return validSecret(saved)?saved:null;
+}
+async function reserveRemote(slug,secret){
+ const res=await fetch(CLOUD_URL+"/rest/v1/rpc/reserve_profile",{method:"POST",headers:{"apikey":CLOUD_KEY,"Content-Type":"application/json"},body:JSON.stringify({p_slug:slug,p_secret:secret}),cache:"no-store"});
+ if(!res.ok)throw Error("Profilreservierung HTTP "+res.status);
+ return res.json();
+}
 const PROFILE_KEY="hbg5-26-active-profile";
 const prefix="/HBG5-26/";
 const params=new URLSearchParams(location.search);
@@ -36,7 +52,7 @@ const box=document.getElementById("profile-box");
 function profileLinks(){
  document.querySelectorAll(".exam a").forEach(a=>{
  const url=new URL(a.getAttribute("href"),document.baseURI);
- if(activeProfile)url.searchParams.set("p",activeProfile);
+ if(activeProfile){url.searchParams.set("p",activeProfile);const secret=secretFor(activeProfile);if(secret)url.hash="sync="+secret;}
  else url.searchParams.set("demo","1");
  a.href=url.href;
  });
@@ -59,22 +75,29 @@ function freshSuggestions(){
 function showProfile(){
  if(activeProfile){
   localStorage.setItem(PROFILE_KEY,activeProfile);
-  box.innerHTML='<strong>Dein Lernprofil: '+activeProfile+'</strong><p class="hint">Dieser Link öffnet dein Profil auf diesem Gerät. Eine geräteübergreifende Synchronisation ist noch nicht eingerichtet.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testversion öffnen</button></p>';
+  box.innerHTML='<strong>Dein Lernprofil: '+activeProfile+'</strong><p class="hint">Dieser Link öffnet dein Profil auf diesem Gerät. Die Synchronisierung wird im Hintergrund eingerichtet.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testversion öffnen</button></p>';
   document.getElementById("switch-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
   document.getElementById("demo-profile").onclick=()=>{location.href=prefix};
  }else{
-  box.innerHTML='<strong>Testversion</strong><p class="hint">Hier kannst du die Lernapps ausprobieren. Die Lernstände bleiben auf diesem Gerät.</p><h2>Eigenes Lernprofil</h2><p class="hint">Wähle einen vorgeschlagenen Lernlink. Die zufälligen Zeichen machen doppelte Namen sehr unwahrscheinlich.</p><div id="profile-choices"></div><p><button id="refresh-profiles" type="button">Andere Vorschläge</button></p><p class="error" id="profile-error" role="alert"></p><p class="hint">Die zentrale Prüfung, ob ein Name bereits auf einem anderen Gerät verwendet wird, folgt mit der Datenbankanbindung.</p>';
+  box.innerHTML='<strong>Testversion</strong><p class="hint">Hier kannst du die Lernapps ausprobieren. Die Lernstände bleiben auf diesem Gerät.</p><h2>Eigenes Lernprofil</h2><p class="hint">Wähle einen vorgeschlagenen Lernlink. Die zufälligen Zeichen machen doppelte Namen sehr unwahrscheinlich.</p><div id="profile-choices"></div><p><button id="refresh-profiles" type="button">Andere Vorschläge</button></p><p class="error" id="profile-error" role="alert"></p><p class="hint">Profilnamen werden bei der Anlage zentral reserviert.</p>';
   const choices=document.getElementById("profile-choices");
   function drawSuggestions(){
    choices.replaceChildren();
    freshSuggestions().forEach(name=>{
     const button=document.createElement("button");button.type="button";button.textContent=name;button.style.margin="0 8px 8px 0";
-    button.onclick=()=>{
+    button.onclick=async()=>{
      if(!validSlug(name)||RESERVED_PROFILES.has(name)||knownProfiles().includes(name)){
       document.getElementById("profile-error").textContent="Dieser Name ist bereits auf diesem Gerät vergeben. Bitte wähle einen anderen.";drawSuggestions();return;
      }
+     button.disabled=true;
+     const secret=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,"0")).join("");
+     try{await reserveRemote(name,secret)}catch{
+      document.getElementById("profile-error").textContent="Profil konnte nicht angelegt werden. Bitte prüfe die Verbindung oder wähle einen anderen Namen.";
+      button.disabled=false;return;
+     }
+     localStorage.setItem(CLOUD_PREFIX+name,secret);
      const known=knownProfiles();known.push(name);localStorage.setItem(PROFILE_REGISTRY_KEY,JSON.stringify(known));
-     activeProfile=name;history.replaceState(null,"",prefix+encodeURIComponent(name));
+     activeProfile=name;history.replaceState(null,"",prefix+encodeURIComponent(name)+"#sync="+secret);
      showProfile();
      box.insertAdjacentHTML("beforeend",'<p><strong>Dein persönlicher Link:</strong></p><p><code id="profile-link"></code></p><button id="copy-profile">Link kopieren</button>');
      document.getElementById("profile-link").textContent=location.href;
@@ -186,5 +209,6 @@ function progress(){
 }
 progress();
 orderExams();
+profileLinks(); // Include the dynamically cloned 'Als Nächstes dran' links.
 window.addEventListener('pageshow',()=>progress());
 </script><script defer src="shared/feedback.js?v=1"></script></body></html>

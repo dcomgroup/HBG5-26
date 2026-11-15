@@ -1,0 +1,23 @@
+name: Persistence smoke
+on:
+  push:
+    branches: [feature/persistence-integration-20261115]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: mkdir -p /tmp/hbg-preview/HBG5-26 && cp -a . /tmp/hbg-preview/HBG5-26/
+      - run: python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/hbg-preview &
+      - run: node tests/browser-smoke.cjs
+      - run: node tests/live-supabase.cjs
+      - run: node tests/migration-srs.cjs
+      - run: node tests/math-progress.cjs

@@ -1,0 +1,68 @@
+{
+  "rewrites": [
+    {
+      "source": "/HBG5-26",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/HBG5-26/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/HBG5-26/englisch/test-01",
+      "destination": "/englisch/test-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/englisch/test-01/",
+      "destination": "/englisch/test-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/deutsch/test-01",
+      "destination": "/deutsch/test-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/deutsch/test-01/",
+      "destination": "/deutsch/test-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/mathe/test-01",
+      "destination": "/mathe/test-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/mathe/test-01/",
+      "destination": "/mathe/test-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/biologie/klassenarbeit-01",
+      "destination": "/biologie/klassenarbeit-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/biologie/klassenarbeit-01/",
+      "destination": "/biologie/klassenarbeit-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/latein/test-01",
+      "destination": "/latein/test-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/latein/test-01/",
+      "destination": "/latein/test-01/index.html"
+    },
+    {
+      "source": "/HBG5-26/latein/test-02",
+      "destination": "/latein/test-02/index.html"
+    },
+    {
+      "source": "/HBG5-26/latein/test-02/",
+      "destination": "/latein/test-02/index.html"
+    },
+    {
+      "source": "/HBG5-26/:profile([a-z0-9][a-z0-9-]{2,23})",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/HBG5-26/:path*",
+      "destination": "/:path*"
+    }
+  ]
+}
