@@ -55,6 +55,11 @@ const routes=['','latein/test-01/','latein/test-02/','mathe/test-01/','deutsch/t
  const queued=await p1.evaluate(k=>JSON.parse(localStorage.getItem(k)||'[]'),outboxKey);
  assert(queued.length>=1,'offline answer not queued');
  const before=events.length;
+ // A full browser reload while offline must retain both the card state and the outbox.
+ await p1.reload();
+ const afterReload=await p1.evaluate(k=>({pending:JSON.parse(localStorage.getItem(k)||'[]'),cards:JSON.parse(localStorage.getItem('hbg5-26-englisch-vocab')).profiles['qa-profile'].cards}),outboxKey);
+ assert(afterReload.pending.length>=1,'offline outbox lost after reload');
+ assert(Object.keys(afterReload.cards).length>=1,'offline learning state lost after reload');
  disconnected=false;
  await p1.evaluate(()=>window.dispatchEvent(new Event('online')));
  await p1.waitForFunction(k=>JSON.parse(localStorage.getItem(k)||'[]').length===0,outboxKey,{timeout:10000});
