@@ -5,7 +5,7 @@ const src=fs.readFileSync("shared/cloud-transport.js","utf8");
 const storage=new Map();
 const localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
 const window={};
-vm.runInNewContext(src,{window,globalThis:window});
+vm.runInNewContext(src,{window,globalThis:window,URLSearchParams});
 const api=window.HBG_CLOUD_TRANSPORT;
 const secret="a".repeat(64);
 assert.equal(api.credentials("?p=panda-7a683212","",localStorage),null);
