@@ -12,6 +12,9 @@ on:
       - 'tests/v1-browser-smoke.cjs'
       - '.github/workflows/v1-browser-smoke.yml'
   workflow_dispatch:
+concurrency:
+  group: v1-browser-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
