@@ -23,27 +23,46 @@ async function sync(options={}){
   const rows=await client.read(appId);
   let db;try{db=JSON.parse(localStorage.getItem(key)||"{}")}catch{db={}}
   const p=db[slug]||{states:{},rounds:0,answers:0};p.states||={};p._cloudStamps||={};
+  const remoteIds=new Set(rows.map(row=>String(row.card_id)));
+  const unstamped=Object.entries(p.states).filter(([id,value])=>!remoteIds.has(id)&&!p._cloudStamps[id]&&Number(value)>0);
+  const localTotals=!remoteIds.has("__totals__")&&!p._cloudTotalsAt&&(Number(p.answers)>0||Number(p.rounds)>0);
   for(const row of rows){
    const state=row.event_data?.state,stamp=Date.parse(row.occurred_at),id=row.card_id;
    if(!state||!Number.isFinite(stamp))continue;
    if(id==="__totals__"){
-    if((p.answers||p.rounds)&&!p._cloudTotalsAt)continue;
+    if((p.answers||p.rounds)&&!p._cloudTotalsAt){
+     localStorage.setItem("hbg5-26-schnellcheck-local-backup:"+slug,JSON.stringify(p));
+    }
     if(stamp>Number(p._cloudTotalsAt||0)){
      p.answers=Number(state.answers)||0;p.rounds=Number(state.rounds)||0;
      p.last=state.last||p.last;p._cloudTotalsAt=stamp;
     }
    }else if(/^\d{1,3}$/.test(id)){
-    if(p.states[id]!==undefined&&!p._cloudStamps[id])continue;
+    if(p.states[id]!==undefined&&!p._cloudStamps[id]){
+     localStorage.setItem("hbg5-26-schnellcheck-local-backup:"+slug,JSON.stringify(p));
+    }
     if(stamp>Number(p._cloudStamps[id]||0)){
      p.states[id]=Math.max(0,Math.min(2,Number(state.level)||0));p._cloudStamps[id]=stamp;
     }
    }
   }
   db[slug]=p;localStorage.setItem(key,JSON.stringify(db));
+  // Transfer existing local Schnellcheck progress once, without overwriting cloud cards.
+  if(unstamped.length||localTotals){
+   for(const [id,level] of unstamped){
+    const ev=record(id,{level:Number(level)||0});
+    p._cloudStamps[id]=Date.parse(ev.at);
+   }
+   if(localTotals){const ev=record("__totals__",{answers:p.answers,rounds:p.rounds,last:p.last});p._cloudTotalsAt=Date.parse(ev.at)}
+   db[slug]=p;localStorage.setItem(key,JSON.stringify(db));
+   again=true;
+  }
   return rows;
  }catch{return null}
- finally{syncing=false;if(again){again=false;queueMicrotask(()=>void sync({pushOnly:true}))}}
+ finally{syncing=false;if(again){again=false;queueMicrotask(()=>void sync())}}
 }
-window.addEventListener("online",()=>void sync({pushOnly:true}));
+window.addEventListener("online",()=>void sync());
+window.addEventListener("pageshow",()=>void sync());
+window.addEventListener("focus",()=>void sync());
 window.HBG_QUICK_CLOUD=Object.freeze({enabled:true,slug,record,sync,pending:()=>pending().length});
 })();
