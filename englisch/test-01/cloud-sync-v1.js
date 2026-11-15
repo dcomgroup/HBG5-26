@@ -57,8 +57,14 @@ async function sync(options={}){
     window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:row.card_id,reason:"divergent-equal-attempts"}}));
     continue;
    }
+   if(local&&local._cloudAt&&stamp>Number(local._cloudAt)&&
+      Number(state.right||0)+Number(state.wrong||0)===Number(local.right||0)+Number(local.wrong||0)&&
+      local._cloudEventId&&row.event_id&&local._cloudEventId!==row.event_id){
+    window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:row.card_id,reason:"concurrent-equal-count-events"}}));
+    continue;
+   }
    if(!local||stamp>Number(local._cloudAt||0)){
-    p.cards[row.card_id]={...state,_cloudAt:stamp};changed=true;
+    p.cards[row.card_id]={...state,_cloudAt:stamp,_cloudEventId:row.event_id||null};changed=true;
    }
   }
   if(changed){db.profiles[slug]=p;localStorage.setItem(stateKey,JSON.stringify(db));}
@@ -72,6 +78,7 @@ async function sync(options={}){
 function record(cardId,state){
  const event=enqueue(cardId,state);
  state._cloudAt=Date.parse(event.at);
+ state._cloudEventId=event.id;
  void sync({pushOnly:true});
 }
 window.addEventListener("online",()=>void sync());
