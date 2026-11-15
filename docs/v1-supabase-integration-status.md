@@ -45,3 +45,8 @@ Stand 2026-11-15. **Nur Entwicklungsbranch, kein Produktiv-Rollout.**
 - `shared/migrate-local-v1.js`: explizite Migration mit lokalem Quellprofil, Sicherungspflicht, Prüfung vorhandener Cloud-Daten pro App, wiederaufnehmbarer Upload-Plan mit stabilen Ereignis-IDs. Bereits belegte Cloud-App-Daten werden übersprungen und nicht überschrieben. **Keine Migration ohne Nutzerbestätigung**, keine Löschung lokaler Daten.
 - Automatisierte Tests: Cloud-Transport, alle sechs App-Adapter, Offline-Outbox, Panda-Mathe-Kompatibilität, idempotente Migration und echte Chromium-Browserprüfungen für Profilführung und geräteübergreifenden Englisch-Lernstand. Ergebnisse in GitHub Actions von PR #12.
 - **Offen:** reale Datenmigration in weiteren Fächern, App-spezifische Konflikttests bei parallelen Geräten, Browser-E2E der Migration und der übrigen Fächer, Sicherheits-/Missbrauchsschutz, echte Abnahme mit zwei physischen Geräten, Freigabe und Rollout.
+
+## Preview-Deployment-Limit (15.11.2026)
+- Vercel-Projekt `hbg5-26-preview` (Team `fe-26`) hat das Hobby-Limit von mehr als 100 API-Deployments innerhalb von 24 Stunden erreicht (`402 api-deployments-young-hobby-team-24h`).
+- Letzter bestätigter Vercel-Preview-Commit: `97d25b5223c05764bea2c2015b2033ef76745bf8`. Dieser ist **nicht** der aktuelle Entwicklungsstand und darf nicht als Abnahme des aktuellen PR #12 gelten.
+- Browser-Regressionen laufen unabhängig davon in GitHub Actions auf dem tatsächlichen PR-Commit mit lokalem HTTP-Server und Chromium. Für die finale menschliche Preview-Abnahme ist nach Ablauf der Vercel-Sperre ein neues Deployment erforderlich. Keine Produktionsfreigabe währenddessen.
