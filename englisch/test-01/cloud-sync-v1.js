@@ -47,6 +47,10 @@ async function sync(options={}){
     window.dispatchEvent(new CustomEvent("hbg-cloud-migration-needed",{detail:{appId,cardId:row.card_id}}));
     continue;
    }
+   if(local&&Number(state.right||0)+Number(state.wrong||0)<Number(local.right||0)+Number(local.wrong||0)){
+    window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:row.card_id,reason:"remote-attempt-count-regressed"}}));
+    continue;
+   }
    if(!local||stamp>Number(local._cloudAt||0)){
     p.cards[row.card_id]={...state,_cloudAt:stamp};changed=true;
    }
