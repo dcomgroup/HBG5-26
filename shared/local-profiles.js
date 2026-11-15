@@ -6,8 +6,9 @@ const SELECT="hbg5-26-selected-local-profile";
 const parse=k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}};
 const add=(set,v)=>{if(typeof v==="string"&&v.trim()&&v!=="__demo__")set.add(v.trim())};
 function names(){
- const set=new Set(),m=parse("hbg5-26-mathe-test-01"),e=parse("hbg5-26-englisch-vocab"),d=parse("hbg5-26:deutsch:test-01:profiles-v1"),b=parse("hbg5-26-bio-ka01-profiles-v1");
+ const set=new Set(),q=parse("hbg5-26-mathe-schnellcheck-v1"),m=parse("hbg5-26-mathe-test-01"),e=parse("hbg5-26-englisch-vocab"),d=parse("hbg5-26:deutsch:test-01:profiles-v1"),b=parse("hbg5-26-bio-ka01-profiles-v1");
  for(const p of Object.keys(m?.profiles||{}))add(set,p);
+ for(const p of Object.keys(q||{}))add(set,p);
  for(const p of Object.keys(e?.profiles||{}))add(set,p);
  for(const p of Object.values(d?.profiles||{}))add(set,p?.profile);
  for(const p of b||[])add(set,p);
@@ -49,12 +50,13 @@ function render(){
  setLinks();
 }
 async function erase(name){
+ const quick=parse("hbg5-26-mathe-schnellcheck-v1");if(quick&&Object.hasOwn(quick,name)){delete quick[name];localStorage.setItem("hbg5-26-mathe-schnellcheck-v1",JSON.stringify(quick))}
  const math=parse("hbg5-26-mathe-test-01");if(math?.profiles?.[name]){delete math.profiles[name];localStorage.setItem("hbg5-26-mathe-test-01",JSON.stringify(math))}
  const english=parse("hbg5-26-englisch-vocab");if(english?.profiles?.[name]){delete english.profiles[name];localStorage.setItem("hbg5-26-englisch-vocab",JSON.stringify(english))}
  const dk="hbg5-26:deutsch:test-01:profiles-v1",german=parse(dk);
  if(german?.profiles){for(const [key,p] of Object.entries(german.profiles))if(p?.profile===name)delete german.profiles[key];if(!german.profiles[german.active])german.active=Object.keys(german.profiles)[0]||"";localStorage.setItem(dk,JSON.stringify(german))}
  const bk="hbg5-26-bio-ka01-profiles-v1",bio=parse(bk);if(Array.isArray(bio)){localStorage.setItem(bk,JSON.stringify(bio.filter(x=>x!==name)));localStorage.removeItem("hbg5-26-bio-ka01-learn-v1-"+name);if(localStorage.getItem("hbg5-26-bio-ka01-profile-v1")===name)localStorage.removeItem("hbg5-26-bio-ka01-profile-v1")}
- if(!indexedDB)return;
+ if(!window.indexedDB)return;
  await new Promise((resolve,reject)=>{
   const request=indexedDB.open("hbg5-26-latein-v1");
   request.onupgradeneeded=()=>request.transaction.abort();
