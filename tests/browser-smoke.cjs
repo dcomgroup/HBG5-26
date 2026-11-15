@@ -15,6 +15,19 @@ const routes=['','latein/test-01/','latein/test-02/','mathe/test-01/','deutsch/t
   if(!route)assert.equal(await page.locator('#upcoming-list').count(),1);
   await page.close();
  }
+ // Math: local legacy mastery must be marked due until its age is verified.
+ const math=await browser.newContext();
+ const mathPage=await math.newPage();
+ await mathPage.goto(base+'mathe/test-01/?demo=1');
+ await mathPage.evaluate(()=>{
+  localStorage.setItem('hbg5-26-mathe-test-01',JSON.stringify({profiles:{CE:{cards:{0:{level:3,right:3,wrong:0},1:{level:3,right:3,wrong:0,lastCorrect:new Date().toISOString(),dueAt:Date.now()+86400000},2:{level:3,right:3,wrong:0,lastCorrect:new Date(Date.now()-15*86400000).toISOString(),dueAt:Date.now()-86400000}},rounds:2,answers:16}}}));
+ });
+ await mathPage.reload();
+ await mathPage.getByRole('button',{name:'CE'}).click();
+ await mathPage.getByText('1 von 33 Aufgabentypen').waitFor();
+ assert((await mathPage.locator('#app').innerText()).includes('2 auffrischen'),'Math legacy and expired cards should be due');
+ assert((await mathPage.locator('#app').innerText()).includes('Letzte Übung:'),'Math last review date missing');
+ await mathPage.close();await math.close();
  const events=[],secret='a'.repeat(64),profile='qa-profile';
  let disconnected=false;
  const a=await browser.newContext(),b=await browser.newContext();
