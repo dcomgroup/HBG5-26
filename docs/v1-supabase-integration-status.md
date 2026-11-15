@@ -58,3 +58,9 @@ Stand 2026-11-15. **Nur Entwicklungsbranch, kein Produktiv-Rollout.**
 - Browser-RPCs sind **gemockt**, daher kein Beleg für erfolgreiche echte Supabase-Übertragung oder reale physische Geräte.
 - Vercel-Preview war beim letzten Check noch auf älterem Commit `222018f`, nicht auf dem aktuellen Branch. Keinen veralteten Preview-Stand freigeben.
 - **Supabase-Auswirkung: ja.** Keine produktiven Datenbankänderungen oder Merge erfolgt.
+
+## Konflikt-Regressionen (15.11.2026)
+- Mathe und Englisch erkennen jetzt zusätzlich den Fall, dass zwei Geräte **gleich viele Bewertungen**, aber unterschiedliche Richtig/Falsch-Zähler derselben Karte melden. Der lokale Stand wird in diesem Fall nicht stillschweigend überschrieben; stattdessen wird `hbg-cloud-conflict` ausgelöst.
+- Tests in `tests/v1-math-cloud.cjs` und `tests/v1-english-cloud.cjs` decken diese Divergenz zusätzlich zum Fall geringerer Remote-Bewertungszahlen ab.
+- **Weiterhin offener Release-Blocker:** Die Cloud enthält weiterhin beide Snapshots, aber eine verlustfreie, deterministische Zusammenführung gleichzeitiger Bewertungen ist in V1 noch nicht nachgewiesen. Ein Konflikthinweis allein ersetzt diese Abnahme nicht.
+- **Supabase-Auswirkung: ja** (Synchronisationskonflikte). Keine Änderung an Datenbanktabellen, bereits vorhandenen Events oder Produktivcode.
