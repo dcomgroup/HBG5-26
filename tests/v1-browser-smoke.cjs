@@ -71,7 +71,7 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   await a.locator(".option").first().click();
   await a.getByRole("button",{name:"Antwort prüfen"}).click();
   await a.waitForFunction(()=>JSON.parse(localStorage.getItem("hbg5-26-mathe-outbox:qa-cloud-profile")||"[]").length===0);
-  const mathEvents=events.filter(e=>/^\\d{1,3}$/.test(e.card_id));
+  const mathEvents=events.filter(e=>/^\d{1,3}$/.test(e.card_id));
   assert.equal(mathEvents.length,1,"Math must upload the answered card");
   const mathOther=await browser.newContext();
   await installRoute(mathOther);
