@@ -48,8 +48,10 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   await local.close();
 
   const slug="qa-cloud-profile",secret="a".repeat(64),events=[];
+  let cloudNetworkEnabled=true;
   const cloud=await browser.newContext();
   const installRoute=async ctx=>ctx.route("https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/**",async route=>{
+   if(!cloudNetworkEnabled){await route.abort("internetdisconnected");return}
    const name=route.request().url().split("/").pop(),p=route.request().postDataJSON();
    if(p.p_slug!==slug||p.p_secret!==secret){await route.fulfill({status:403,body:"{}"});return}
    if(name==="read_learning_events"){await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(events)});return}
@@ -106,12 +108,14 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   await other.close();
   // A second answer during a network outage must remain in the local outbox,
   // then upload exactly once when connectivity returns.
+  cloudNetworkEnabled=false;
   await cloud.setOffline(true);
   await a.getByRole("button",{name:"Weiter",exact:true}).click();
   await a.getByRole("button",{name:"Lösung aufdecken"}).click();
   await a.getByRole("button",{name:"Gewusst",exact:true}).click();
   await a.waitForFunction(()=>JSON.parse(localStorage.getItem("hbg5-26-englisch-outbox:qa-cloud-profile")||"[]").length===1);
   assert.equal(events.filter(e=>e.card_id.startsWith("en-")).length,1,"offline answer must not reach the cloud");
+  cloudNetworkEnabled=true;
   await cloud.setOffline(false);
   await a.evaluate(()=>window.HBG_ENGLISH_CLOUD.sync());
   await a.waitForFunction(()=>JSON.parse(localStorage.getItem("hbg5-26-englisch-outbox:qa-cloud-profile")||"[]").length===0);
