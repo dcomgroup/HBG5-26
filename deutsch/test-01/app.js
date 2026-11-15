@@ -26,6 +26,8 @@ questions.push(...[["Welches Wort bezeichnet einen Gedanken?","Hoffnung","Hoffnu
 const $=id=>document.getElementById(id);
 const STORAGE="hbg5-26:deutsch:test-01:profiles-v1";
 const cloud=window.HBG_DEUTSCH_CLOUD;
+const routedProfile=new URLSearchParams(location.search).get("p");
+const fixedProfile=routedProfile&&/^[a-z0-9][a-z0-9-]{2,63}$/.test(routedProfile)?routedProfile:null;
 function key(name){return name.trim().toLocaleLowerCase("de")}
 function blank(name){return {profile:name,stats:{},log:[]}}
 let profiles={},active="";
@@ -85,7 +87,7 @@ function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:"a
 function render(){const mode=$("mode");mode.textContent={home:"Start",diagnose:"Diagnose",training:"Training",boss:"Bosskampf",results:"Ergebnis",caughtup:"Erledigt",extra:"Extra-Training"}[phase];const root=$("app");
 if(phase==="home"){const st=status();const names=Object.keys(profiles);
 root.innerHTML='<section class="card"><h2>🏴‍☠️ Die Piraten-Akademie</h2><p>Trainiere die Grammatik für deinen Deutschtest.</p><label for="profile">Lernprofil auswählen</label><select id="profile" class="btn">'+(names.length?names.map(id=>'<option value="'+esc(id)+'" '+(id===active?'selected':'')+'>'+esc(profiles[id].profile)+'</option>').join(''):'<option value="">Noch kein Profil</option>')+'</select><label for="newprofile">Neues Lernprofil</label><input id="newprofile" placeholder="Name des Kindes" maxlength="50"><button class="btn" id="createprofile">Neues Profil anlegen</button><p id="profileerror" class="bad"></p><p><strong>'+st.due+' Wiederholungen fällig</strong> · '+st.learned+' Aufgaben mindestens zweimal hintereinander richtig</p><p class="muted small">Jedes Profil hat einen eigenen Lernstand auf diesem Gerät.</p><button class="btn primary" id="start">Diagnose starten</button><button class="btn" id="train">Adaptives Training</button><button class="btn" id="extra">Noch eine Runde üben</button><button class="btn" id="boss">Bosskampf</button><button class="btn" id="backup">Lernstand exportieren</button><label for="importfile">Lernstand aus bisheriger App importieren</label><input id="importfile" type="file" accept=".json,application/json"></section>';
-if(cloud?.enabled){$("profile").disabled=true;$("newprofile").hidden=true;$("createprofile").hidden=true;}
+if(cloud?.enabled||fixedProfile){$("profile").disabled=true;$("newprofile").hidden=true;$("createprofile").hidden=true;}
 $("profile").onchange=e=>switchProfile(e.target.value);
 $("createprofile").onclick=()=>{const name=$("newprofile").value.trim();if(!name){$("profileerror").textContent="Bitte einen Namen eingeben.";return}if(profiles[key(name)]){$("profileerror").textContent="Dieses Profil existiert bereits. Bitte oben auswählen.";return}createProfile(name)};
 const requireProfile=type=>{if(!active){$("profileerror").textContent="Bitte zuerst ein Lernprofil anlegen.";return}start(type)};
@@ -99,9 +101,8 @@ if(checked){$("feedback").innerHTML='<p class="'+(correct?"good":"bad")+'">'+(co
 $("action").onclick=()=>{if(checked)next();else if(answer.trim())check()};}
 async function initCloud(){
  if(!cloud?.enabled){
-  const routed=new URLSearchParams(location.search).get("p");
-  if(routed&&/^[a-z0-9][a-z0-9-]{2,63}$/.test(routed)){
-   active=key(routed);if(!profiles[active])profiles[active]=blank(routed);
+  if(fixedProfile){
+   active=key(fixedProfile);if(!profiles[active])profiles[active]=blank(fixedProfile);
    data=profiles[active];persist();
   }
   render();return;
