@@ -35,6 +35,9 @@ const api=window.HBG_V1_MIGRATE,creds=window.HBG_CLOUD_TRANSPORT.credentials(con
  const {key,plan}=await api.prepare(source,creds);
  assert.equal(plan.skipped,0);
  assert.equal(plan.events.length,8); // Math 2, Schnellcheck 2, English 1, German 2, Bio 1
+ events.push({event_id:"foreign-event",app_id:"mathe",card_id:"0",event_data:{state:{level:1}},occurred_at:new Date().toISOString()});
+ await assert.rejects(()=>api.execute(key,creds),/Cloud-Daten/);
+ events.pop();
  failAfter=2;await assert.rejects(()=>api.execute(key,creds));
  assert.equal(events.length,2,"two events should already be safely committed");
  failAfter=null;const result=await api.execute(key,creds);
