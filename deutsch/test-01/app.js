@@ -37,6 +37,8 @@ if(!Object.keys(profiles).length){
  if(legacy){const name=String(legacy.profile||"Bisheriges Profil").trim()||"Bisheriges Profil";active=key(name);profiles[active]={profile:name,stats:legacy.stats||{},log:legacy.log||[]}}
 }
 if(!active||!profiles[active])active=Object.keys(profiles)[0]||"";
+const localFromHome=!fixedProfile?new URLSearchParams(location.search).get("local"):null;
+if(localFromHome&&localFromHome.length<=40){active=key(localFromHome);if(!profiles[active])profiles[active]=blank(localFromHome);}
 let data=active?profiles[active]:blank("");
 function persist(){if(active)profiles[active]=data;localStorage.setItem(STORAGE,JSON.stringify({active,profiles}))}
 function switchProfile(name){const id=key(name);if(!profiles[id])return;active=id;data=profiles[id];persist();phase="home";render()}
