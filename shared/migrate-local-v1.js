@@ -102,6 +102,11 @@ async function execute(key,credentials){
  const plan=parse(key);
  if(!plan||plan.target!==credentials.slug||!Array.isArray(plan.events))throw Error("Ungültiger Migrationsplan.");
  const client=transport.createClient(credentials),sent=new Set(plan.sent||[]);
+ const plannedIds=new Set(plan.events.map(e=>e.id));
+ for(const appId of new Set(plan.events.map(e=>e.appId))){
+  const rows=await client.read(appId);
+  if(!Array.isArray(rows)||rows.some(row=>!plannedIds.has(row.event_id)))throw Error("Cloud-Daten haben sich seit der Vorbereitung verändert. Übernahme gestoppt.");
+ }
  for(const ev of plan.events){
   if(sent.has(ev.id))continue;
   await client.append(ev);
