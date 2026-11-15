@@ -19,7 +19,7 @@ Stand: 2026-11-15. Gilt ab der Entscheidung, die Produktiv-UX **zuerst** abzuneh
 - [x] Automatisierter Chromium-Browsertest für lokale Profilführung und A→B-Sync mit **gemockten** Supabase-RPCs eingerichtet. CI-Lauf des finalen PR-Commits vor Freigabe erneut verifizieren.
 - [ ] Reale App-Datenmigration im Preview für jedes Fach prüfen, insbesondere vorhandene Browserprofile und Offline-Neustart.
 - [ ] Konfliktfall zweier Geräte mit parallelen Änderungen an derselben Karte sicher behandeln. Aktuell werden Zustands-Snapshots zeitlich abgeglichen; dies kann eine Bewertung in der Anzeige übergehen. Keine Freigabe ohne geklärte Behandlung.
-- [ ] RPC-Missbrauchsschutz und Sicherheitsbewertung abschließen: öffentlich ausführbare SECURITY-DEFINER-Funktionen sind tokenbasiert geschützt, aber insbesondere `reserve_profile` hat keine belegte Rate-Limit-Absicherung.
+- [ ] RPC-Missbrauchsschutz und Sicherheitsbewertung abschließen: `anon` kann die drei SECURITY-DEFINER-RPCs ausführen, hat aber keine direkten Tabellenrechte. `reserve_profile` hat kein Rate-Limit. `read_learning_events` ist auf 10.000 Ereignisse je App begrenzt und benötigt vor langfristiger Freigabe einen Paging-/Retention-Plan.
 - [ ] Alle Profil-/Lernstands-Regressionen in echter Browser-Preview testen; keine 404s oder verdeckten UI-Änderungen.
 - [ ] **Reale Zwei-Geräte-Abnahme durch Nutzer** mit vollständig persönlichem Profil-Link, insbesondere bereits importiertem Panda-Mathe-Stand.
 - [ ] Freigabe zur Produktion ausdrücklich einholen.
