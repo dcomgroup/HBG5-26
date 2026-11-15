@@ -97,4 +97,29 @@ root.innerHTML='<section class="card"><div class="row"><span>Aufgabe '+(index+1)
 if(opts){document.querySelectorAll(".option").forEach(b=>{b.onclick=()=>{if(checked)return;answer=b.dataset.value;document.querySelectorAll(".option").forEach(x=>x.classList.toggle("chosen",x===b))}})}else{$("typed").value=answer;$("typed").oninput=e=>answer=e.target.value}
 if(checked){$("feedback").innerHTML='<p class="'+(correct?"good":"bad")+'">'+(correct?"✓ Richtig!":"✗ Richtige Antwort: "+esc(q[1]))+'</p><p>'+esc(q[3])+'</p>';document.querySelectorAll(".option").forEach(b=>{b.disabled=true;b.classList.toggle("good",b.dataset.value===q[1]);b.classList.toggle("bad",b.dataset.value===answer&&!correct)});if($("typed"))$("typed").disabled=true}
 $("action").onclick=()=>{if(checked)next();else if(answer.trim())check()};}
-render();
+async function initCloud(){
+ if(!cloud?.enabled){render();return}
+ active=cloud.slug;
+ if(!profiles[active])profiles[active]=blank(active);
+ data=profiles[active];persist();
+ const rows=await cloud.sync();
+ if(Array.isArray(rows)){
+  const logIds=new Set(data.log.filter(e=>e.cloudId).map(e=>e.cloudId));
+  for(const row of rows){
+   if(row.card_id==="__log__"){
+    const entry=row.event_data?.entry;
+    if(!entry||!entry.cloudId||logIds.has(entry.cloudId))continue;
+    data.log.push(entry);logIds.add(entry.cloudId);
+   }else if(/^\d{1,3}$/.test(row.card_id)){
+    const state=row.event_data?.state,stamp=Date.parse(row.occurred_at);
+    if(!state||!Number.isFinite(stamp))continue;
+    const old=data.stats[row.card_id];
+    if(old&&!old._cloudAt)continue;
+    if(!old||stamp>Number(old._cloudAt||0))data.stats[row.card_id]={...state,_cloudAt:stamp};
+   }
+  }
+  persist();
+ }
+ render();
+}
+void initCloud();
