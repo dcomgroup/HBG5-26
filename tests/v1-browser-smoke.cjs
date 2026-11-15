@@ -83,6 +83,7 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   await mathB.waitForFunction(slug=>Object.keys(JSON.parse(localStorage.getItem("hbg5-26-mathe-test-01")||"{}").profiles?.[slug]?.cards||{}).length===1,slug);
   await mathOther.close();
   await a.goto(mathLink);
+  console.log("MATH RELOAD DEBUG:",(await a.locator("#app").innerText()).slice(0,800));
   const quick=await a.getByRole("link",{name:/Schnellcheck/}).getAttribute("href");
   assert.ok(quick.includes("p="+slug)&&quick.includes("#sync="+secret));
   await a.goto(quick);
