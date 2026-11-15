@@ -65,7 +65,9 @@
 - Automatisierte Nachweise anhand des tatsächlich ausgeführten Workflows überprüft: CI #60 erfolgreich, Browser-Simulation, echte Supabase-A→B→A-Synchronisierung und Englisch-Migration mit 48 simulierten Karten.
 - Die automatisierte Migration prüft **nur Englisch und simulierte lokale Bestandsdaten**, nicht die realen lokalen Browserstände des Nutzers. Diese Daten liegen ausschließlich im jeweiligen Browser und können nicht über GitHub oder Supabase ausgelesen werden, solange sie noch nicht migriert wurden.
 - Das Feature enthält außerdem bereits eine erste Umsetzung von Issue #6 (zeitabhängiger Mathe-Fortschritt); vor einem reinen Persistenz-Rollout muss deren Aufnahme ausdrücklich geprüft oder die Änderung getrennt werden.
-- **Entscheidung:** Kein Merge, bevor Gate 1 vollständig nachgewiesen und dokumentiert ist. Die nächste fehlende externe Evidenz ist eine Bestandsaufnahme in einem bereits verwendeten Produktiv-Browser; kein Löschen von Browserdaten.
+- **Release-Blocker:** [Issue #7: echte lokale Lernprofile sicher in Cloud-Profil übernehmen](https://github.com/dcomgroup/HBG5-26/issues/7). Der neue Cloud-Slug stimmt nicht automatisch mit dem bisherigen lokalen Profilnamen (z. B. `CE`) überein; die bisherige automatische Migration greift daher nicht zuverlässig für echte Altprofile.
+
+**Entscheidung:** Kein Merge, bevor Gate 1 vollständig nachgewiesen und dokumentiert ist. Die nächste fehlende externe Evidenz ist eine Bestandsaufnahme in einem bereits verwendeten Produktiv-Browser; kein Löschen von Browserdaten.
 
 ## Zusätzliche Absicherung (15.11.2026)
 
@@ -78,3 +80,8 @@
 - Feature-Branch: `tests/math-progress.cjs` ergänzt und in `.github/workflows/persistence-smoke.yml` aufgenommen. Prüft 33 Mathe-Aufgabentypen, grün/gelb/grau, Datumsanzeige und Erhalt alter Kartenzustände ohne Zeitstempel.
 - **Status:** Commit `606f1f73a5e7f49d627793d2bdd27420e86c4b26`; ein erfolgreicher CI-Lauf für diesen Commit ist noch **nicht** nachgewiesen. Daher keine Abnahme behaupten.
 - Der reale Altbestand eines produktiven Browsers kann von GitHub/Supabase aus nicht ermittelt werden. Für Gate 1 ist deshalb eine **einmalige Nutzeraktion im bislang genutzten Browser** nötig: lokale Daten vor Migration sichern bzw. die App dort mit dem vorgesehenen Cloud-Profil verknüpfen. Vorher keine Löschung von Website-Daten, kein Browserwechsel als Ersatz für den Altbrowser und kein Merge.
+
+## Weitere technische Prüfung (15.11.2026)
+
+- Playwright-Regressionstest für die Mathe-Anzeige ergänzt: 33 Aufgabentypen, ein aktuell sicherer, ein abgelaufener und ein altes Profil ohne Zeitstempel. Erwartung: 1/33 sicher und 2 fällig. Commit `2fa8b7b` auf dem Feature-Branch. **CI-Ergebnis noch ausstehend.**
+- Issue #7 dokumentiert die fehlende sichere Zuordnung eines bestehenden lokalen Profils zu einem neuen Cloud-Profil. Vor Gate 1 ist ein expliziter, verlustfreier Migrationsweg erforderlich.
