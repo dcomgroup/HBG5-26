@@ -64,3 +64,9 @@ Stand 2026-11-15. **Nur Entwicklungsbranch, kein Produktiv-Rollout.**
 - Tests in `tests/v1-math-cloud.cjs` und `tests/v1-english-cloud.cjs` decken diese Divergenz zusätzlich zum Fall geringerer Remote-Bewertungszahlen ab.
 - **Weiterhin offener Release-Blocker:** Die Cloud enthält weiterhin beide Snapshots, aber eine verlustfreie, deterministische Zusammenführung gleichzeitiger Bewertungen ist in V1 noch nicht nachgewiesen. Ein Konflikthinweis allein ersetzt diese Abnahme nicht.
 - **Supabase-Auswirkung: ja** (Synchronisationskonflikte). Keine Änderung an Datenbanktabellen, bereits vorhandenen Events oder Produktivcode.
+
+## Read-only Sicherheitsprüfung der produktiven Supabase-RPCs
+- SQL-Berechtigungen am 15.11.2026 verifiziert: `anon` darf `reserve_profile`, `append_learning_event` und `read_learning_events` ausführen; `authenticated` hat dafür **kein** EXECUTE-Recht. `anon` hat **keine direkten SELECT-/INSERT-Rechte** auf `profiles` oder `learning_events`; RLS ist für beide Tabellen aktiviert.
+- RPC-Quellcode geprüft: `append_learning_event` und `read_learning_events` prüfen das SHA-256-Hash des übergebenen 64-stelligen Profilschlüssels. `reserve_profile` kann ohne vorherige Identität neue Profile reservieren; es gibt in dieser Funktion kein Rate-Limit. Damit besteht ein potenzielles automatisiertes Spam-/Quota-Risiko. Keine Änderung an produktiven RPCs vorgenommen.
+- `read_learning_events` liefert höchstens **10.000** Ereignisse je App und Profil. Ohne Paging/Retention-Plan ist langfristig eine unvollständige Historie möglich; vor Freigabe begrenzen oder Paging implementieren und testen.
+- **Freigabeentscheidung offen:** Absicherung von Profil-Reservierungen (z. B. vorgeschaltete Rate-Limit-/Bot-Schutz-Schicht) und eventuelle paginierte Reads. Änderungen an produktiven Datenbankfunktionen erst mit gesondertem, überprüftem Migrations- und Rollback-Plan.
