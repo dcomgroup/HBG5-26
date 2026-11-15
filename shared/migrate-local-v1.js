@@ -70,7 +70,7 @@ async function snapshot(source){
  if(german){
   for(const [id,state] of Object.entries(german.stats||{}))events.push(event("deutsch",id,state));
   for(const log of german.log||[]){
-   const entry={...log,cloudId:log.cloudId||crypto.randomUUID()};
+   const entry={...log,cloudId:/^[0-9a-f-]{36}$/i.test(log.cloudId||"")?log.cloudId:crypto.randomUUID()};
    events.push({id:entry.cloudId,appId:"deutsch",cardId:"__log__",data:{entry},at:entry.date||new Date().toISOString()});
   }
  }
