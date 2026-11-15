@@ -18,3 +18,5 @@ jobs:
           node-version: '22'
       - name: Check JavaScript syntax and app entry points
         run: node scripts/check-apps.cjs
+      - name: Test optional Supabase transport
+        run: node tests/v1-cloud-transport.cjs && node tests/v1-english-cloud.cjs && node tests/v1-math-cloud.cjs && node tests/v1-latin-cloud.cjs && node tests/v1-other-cloud.cjs && node tests/v1-quick-cloud.cjs && node tests/v1-migration.cjs
