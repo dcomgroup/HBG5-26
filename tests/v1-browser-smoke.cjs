@@ -25,6 +25,14 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   assert.equal(await page.locator("#profile").getAttribute("readonly"),"");
   await page.getByRole("button",{name:"Runde starten"}).click();
   assert.match(await page.locator("#app").innerText(),/Karte 1 von 8/);
+  await page.goto(base+"deutsch/test-01/?p="+chosen);
+  assert.equal(await page.locator("#profile").inputValue(),chosen);
+  await page.goto(base+"biologie/klassenarbeit-01/?p="+chosen);
+  assert.equal(await page.locator("#profile").inputValue(),chosen);
+  await page.goto(base+"latein/test-01/?p="+chosen);
+  assert.match(await page.locator("#app").innerText(),new RegExp("Profil: "+chosen));
+  await page.goto(base+"mathe/test-01/schnellcheck.html?p="+chosen);
+  assert.match(await page.locator("#app").innerText(),new RegExp(chosen));
   await local.close();
 
   const slug="qa-cloud-profile",secret="a".repeat(64),events=[];
