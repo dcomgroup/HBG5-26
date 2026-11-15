@@ -43,5 +43,11 @@ localStorage.setItem(key,JSON.stringify({profiles:{[slug]:{cards:{"en-001":{righ
  const saved=JSON.parse(localStorage.getItem(key)).profiles[slug].cards;
  assert.equal(saved["en-001"].right,3);
  assert.equal(saved["en-002"].right,1);
+ saved["en-002"]={right:5,wrong:1,streak:2,_cloudAt:Date.parse("2026-11-15T12:00:00Z")};
+ localStorage.setItem(key,JSON.stringify({profiles:{[slug]:{cards:saved}}}));
+ events.push({event_id:"stale-device",card_id:"en-002",event_data:{state:{right:1,wrong:1,streak:0}},occurred_at:"2026-11-15T15:00:00Z"});
+ await adapter.sync();
+ const final=JSON.parse(localStorage.getItem(key)).profiles[slug].cards;
+ assert.equal(final["en-002"].right,5,"lower-attempt remote snapshot must not regress local progress");
  console.log("PASS: English cloud offline queue, idempotent retry, local migration protection");
 })().catch(e=>{console.error(e);process.exitCode=1});
