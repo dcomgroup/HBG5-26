@@ -81,6 +81,15 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   const state=await b.evaluate(slug=>JSON.parse(localStorage.getItem("hbg5-26-englisch-vocab")).profiles[slug].cards,slug);
   assert.equal(Object.values(state).filter(x=>x.right===1).length,1);
   await other.close();
+  const invalid=await browser.newContext();
+  await invalid.route("https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/**",route=>route.fulfill({status:403,body:"{}"}));
+  const bad=await invalid.newPage();
+  await bad.goto(base+"?p=invalid-profile#sync="+secret);
+  await bad.getByText(/Cloud-Zugriff nicht bestätigt/).waitFor();
+  const badLink=await bad.locator('a[href*="englisch/test-01/"]').first().getAttribute("href");
+  assert.ok(badLink.includes("demo=1"));
+  assert.ok(!badLink.includes("#sync="));
+  await invalid.close();
   await cloud.close();
   console.log("PASS: browser local profile confirmation, Math/English handoff, cloud link and A-to-B sync");
  }finally{await browser.close()}
