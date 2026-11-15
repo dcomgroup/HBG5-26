@@ -82,7 +82,7 @@ function localView(missing=false){
   suggest();
  };
  profileLinks();
- window.HBG_LOCAL_PROFILES?.mount();
+ try{window.HBG_LOCAL_PROFILES?.mount()}catch(error){console.error("Lokale Profile:",error);localManager.textContent="Lokale Profilverwaltung konnte nicht geladen werden. Bitte Seite neu laden."}
 }
 async function initProfile(){
  if(!requested||!validSlug(requested)){localView(!!requested);return}
@@ -195,9 +195,9 @@ function progress(){
    });
  });
 }
-progress();
 orderExams();
+try{progress()}catch(error){console.error("Lernstandanzeige:",error)}
 profileLinks();
 window.addEventListener('pageshow',()=>progress());
-window.addEventListener("hbg-local-profile-changed",()=>{profileLinks();progress()});
+window.addEventListener("hbg-local-profile-changed",()=>{profileLinks();try{progress()}catch(error){console.error(error)}});
 </script><script defer src="shared/feedback.js?v=1"></script></body></html>
