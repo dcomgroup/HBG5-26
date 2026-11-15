@@ -12,7 +12,7 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 .track-label{font-size:.76rem;color:#7b8795;margin-top:5px}.done .track{display:none}.done .track-label{display:none}
 .done{background:#f0f1f3;border-color:#e0e3e8;box-shadow:none}.done a{color:#667386}.done .meta{color:#78828c}
 .upcoming{margin:20px 0 28px}.upcoming h2{margin-bottom:10px}.upcoming-list{background:#fff;border:1px solid #e4e9f1;border-radius:15px;padding:4px 16px}.upcoming-item{padding:12px 0;border-bottom:1px solid #edf0f4}.upcoming-item:last-child{border-bottom:0}.upcoming-item a{color:#2458b8;font-weight:650;text-decoration:none}.upcoming-item .meta{margin-top:3px}
-.profile-box{background:#fff;border:1px solid #dfe5ee;border-radius:16px;padding:18px;margin:18px 0}.profile-box input,.profile-box button{font:inherit;padding:10px;border-radius:9px;border:1px solid #b9c5d6}.profile-box button{background:#2458b8;color:white;cursor:pointer}.profile-box button:disabled{background:#e5e9ef;color:#667386;cursor:not-allowed}.profile-box .hint{font-size:.85rem;color:#627084}.profile-box .error{color:#ad2525}.profile-box code{overflow-wrap:anywhere}
+.profile-box{background:#fff;border:1px solid #dfe5ee;border-radius:16px;padding:18px;margin:18px 0}.profile-box input,.profile-box select,.profile-box button{font:inherit;padding:10px;border-radius:9px;border:1px solid #b9c5d6}.profile-box button{background:#2458b8;color:white;cursor:pointer}.profile-box button:disabled{background:#e5e9ef;color:#667386;cursor:not-allowed}.profile-box .hint{font-size:.85rem;color:#627084}.profile-box .error{color:#ad2525}.profile-box code{overflow-wrap:anywhere}
 </style></head><body>
 <header><h1>HBG5-26</h1><p>Lernapps für das Schuljahr 2026/27</p></header><div class="profile-box" id="profile-box"></div><div class="profile-box" id="local-profile-manager" hidden></div>
 <nav class="upcoming" aria-label="Nächste Prüfungen"><h2>Als Nächstes dran</h2><div class="upcoming-list" id="upcoming-list"></div></nav>
@@ -44,8 +44,8 @@ function profileLinks(){
  document.querySelectorAll(".exam a,.upcoming-item a").forEach(a=>{
   const original=a.dataset.originalHref||(a.dataset.originalHref=a.getAttribute("href"));
   const u=new URL(original,document.baseURI);
-  u.searchParams.delete("p");u.searchParams.delete("demo");u.hash="";
-  if(activeProfile)u.searchParams.set("p",activeProfile);else u.searchParams.set("demo","1");
+  u.searchParams.delete("p");u.searchParams.delete("demo");u.searchParams.delete("local");u.hash="";
+  if(activeProfile)u.searchParams.set("p",activeProfile);else if(window.HBG_LOCAL_PROFILES?.selected())u.searchParams.set("local",window.HBG_LOCAL_PROFILES.selected());else u.searchParams.set("demo","1");
   a.href=u.href;
  });
 }
@@ -56,17 +56,30 @@ function localView(missing=false){
  box.innerHTML='<strong>'+(missing?"Dieses Lernprofil gibt es nicht.":"Lokaler Lernmodus")+'</strong><p class="hint">Dein Lernfortschritt wird nur auf diesem Gerät gespeichert.</p><button id="new-cloud">Cloud-Lernprofil erstellen</button><div id="create-profile"></div>';
  document.getElementById("new-cloud").onclick=()=>{
   const target=document.getElementById("create-profile");
-  target.innerHTML='<p>Wähle einen Namen für dein Cloud-Lernprofil.</p><input id="cloud-name" placeholder="z. B. Panda" maxlength="16"><button id="create-cloud">Profil erstellen</button><p class="hint" id="cloud-message"></p>';
-  document.getElementById("create-cloud").onclick=async()=>{
-   const name=document.getElementById("cloud-name").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
-   const message=document.getElementById("cloud-message");
-   if(!validSlug(name)){message.textContent="Bitte mindestens drei Buchstaben eingeben.";return}
-   const bytes=crypto.getRandomValues(new Uint8Array(4));
-   const slug=name.slice(0,16)+"-"+Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
-   const button=document.getElementById("create-cloud");button.disabled=true;
+  target.replaceChildren();
+  const heading=document.createElement("p");heading.textContent="Wähle einen zufällig erzeugten Profilnamen. Nur wer den vollständigen Link kennt, kann auf den Cloud-Lernstand zugreifen.";
+  const choices=document.createElement("div");
+  const message=document.createElement("p");message.className="hint";message.setAttribute("role","status");
+  const animals=["panda","fuchs","otter","luchs","koala","dachs","falke","eule","wolf","tiger","hase","igel"];
+  function generate(){
+   const bytes=crypto.getRandomValues(new Uint8Array(12));
+   return animals[bytes[0]%animals.length]+"-"+Array.from(bytes.slice(1,9),b=>b.toString(16).padStart(2,"0")).join("");
+  }
+  let slug="";
+  const proposal=document.createElement("strong");proposal.style.display="block";proposal.style.margin="12px 0";
+  const refresh=document.createElement("button");refresh.type="button";refresh.textContent="Anderen Namen vorschlagen";
+  refresh.style.marginRight="8px";
+  const create=document.createElement("button");create.type="button";create.textContent="Dieses Cloud-Profil erstellen";
+  function suggest(){slug=generate();proposal.textContent=slug;message.textContent=""}
+  refresh.onclick=suggest;
+  create.onclick=async()=>{
+   create.disabled=true;refresh.disabled=true;message.textContent="Profil wird erstellt …";
    try{await rpc("hbg_reserve_profile",{p_slug:slug});location.href=prefix+"?p="+encodeURIComponent(slug)}
-   catch{message.textContent="Das Profil konnte nicht angelegt werden.";button.disabled=false}
+   catch{message.textContent="Profil konnte nicht erstellt werden. Bitte erneut versuchen.";create.disabled=false;refresh.disabled=false;suggest()}
   };
+  target.append(heading,proposal,choices,message);
+  choices.append(refresh,create);
+  suggest();
  };
  profileLinks();
  window.HBG_LOCAL_PROFILES?.mount();
@@ -150,15 +163,15 @@ function show(card,value,description){
 }
 function progress(){
  const cards=[...document.querySelectorAll('.exam')],mathe=safeParse('hbg5-26-mathe-test-01');
- const mp=mathe?.profiles||{},mn=Object.keys(mp)[0],ms=mp[mn];
+ const mp=mathe?.profiles||{},selectedLocal=window.HBG_LOCAL_PROFILES?.selected(),mn=selectedLocal||Object.keys(mp)[0],ms=mp[mn];
  show(cards[0],ms?percent(Object.values(ms.cards||{}).filter(s=>(s.level||0)>=2).length,33):null,'sichere Aufgabentypen · '+(mn||'kein Profil'));
- const de=safeParse('hbg5-26:deutsch:test-01:profiles-v1'),dp=de?.profiles?.[de.active],ds=dp?.stats;
+ const de=safeParse('hbg5-26:deutsch:test-01:profiles-v1'),dp=de?.profiles?.[selectedLocal?.toLocaleLowerCase('de')||de?.active],ds=dp?.stats;
  show(cards[1],ds?percent(Object.values(ds).filter(s=>s.streak>=2).length,90):null,'Aufgaben mindestens zweimal in Folge richtig · '+(dp?.profile||''));
- const bioProfile=localStorage.getItem('hbg5-26-bio-ka01-profile-v1')||'Kind 1';
+ const bioProfile=selectedLocal||localStorage.getItem('hbg5-26-bio-ka01-profile-v1')||'Kind 1';
  const bio=safeParse('hbg5-26-bio-ka01-learn-v1-'+bioProfile);
  if(bio){const values=Object.values(bio);show(cards[2],percent(values.filter(v=>(v.reps||0)>=2).length,52),'Bildkarten mindestens zweimal gut oder einfach · '+bioProfile)}
  else show(cards[2],null,'Noch kein Lernstand · '+bioProfile);
- const en=safeParse('hbg5-26-englisch-vocab'),ep=en?.profiles||{},enName=Object.keys(ep)[0],es=ep[enName]?.cards;
+ const en=safeParse('hbg5-26-englisch-vocab'),ep=en?.profiles||{},enName=selectedLocal||Object.keys(ep)[0],es=ep[enName]?.cards;
  show(cards[5],es?percent(Object.values(es).filter(s=>s.streak>=2).length,48):null,'Vokabeln mindestens zweimal in Folge richtig · '+enName);
  return Promise.resolve().then(()=>new Promise(resolve=>{
   if(!('indexedDB' in window)){resolve(null);return}
@@ -166,7 +179,7 @@ function progress(){
   request.onerror=()=>resolve(null);
   request.onupgradeneeded=()=>{request.transaction.abort();resolve(null)};
   request.onsuccess=()=>{const db=request.result;if(!db.objectStoreNames.contains('progress')){db.close();resolve(null);return}
-   const profile=localStorage.getItem('hbg5-26-latein-profile')||'MB';
+   const profile=selectedLocal||localStorage.getItem('hbg5-26-latein-profile')||'MB';
    const tx=db.transaction('progress','readonly'),get=tx.objectStore('progress').get(profile);
    get.onsuccess=()=>{db.close();resolve(get.result||{})};get.onerror=()=>{db.close();resolve(null)};
   };
@@ -186,4 +199,5 @@ progress();
 orderExams();
 profileLinks();
 window.addEventListener('pageshow',()=>progress());
+window.addEventListener("hbg-local-profile-changed",()=>{profileLinks();progress()});
 </script><script defer src="shared/feedback.js?v=1"></script></body></html>
