@@ -8,14 +8,14 @@
 
 - [ ] Vorhandene Produktivdaten auf mindestens einem bisher genutzten Browser/Profil **vor Änderungen** erfassen: App, Profil, Anzahl Runden/Antworten, schwierige/sichere Karten und, soweit vorhanden, letzte Übungsdaten. Keine lokalen Daten löschen.
 - [ ] Prüfen, wie bestehende Profile (z. B. lokale Namen wie `CE`) eindeutig einem neuen Cloud-Profil zugeordnet werden. **Keine automatische Zusammenführung unterschiedlicher Kinderprofile.**
-- [ ] Migration im Feature-Preview mit repräsentativen Altständen testen: lokaler Bestand bleibt erhalten, wird genau einmal in Supabase übernommen; erneutes Öffnen erzeugt keine Duplikate.
+- [ ] Migration im Feature-Preview mit repräsentativen **realen Produktiv-Altständen** testen: lokaler Bestand bleibt erhalten, wird genau einmal in Supabase übernommen; erneutes Öffnen erzeugt keine Duplikate. **Teilnachweis:** automatisierter Englisch-Migrationstest mit 48 simulierten Alt-Karten, Duplikatfreiheit und SRS-Auswahl in `tests/migration-srs.cjs`, CI #60 erfolgreich.
 - [ ] Offline-Übung und spätere Synchronisierung testen; fehlgeschlagene Uploads bleiben in der Outbox und werden nach Verbindungsrückkehr nachgeholt.
-- [ ] Zwei Geräte/Browsersitzungen mit demselben vollständigen persönlichen Profil-Link testen: Antworten werden nach Synchronisierung sichtbar, ohne Fortschritt zu überschreiben. Profil-Link mit `#sync=` ist ein Zugangsschlüssel: **nicht in Issues, Screenshots, Logs oder Dokumentation veröffentlichen**.
+- [x] Zwei getrennte Browserkontexte mit demselben vollständigen persönlichen Profil-Link automatisiert getestet: A→B→A über echte Supabase-RPCs und Isolation ohne Schlüssel, `tests/live-supabase.cjs`, CI #60 erfolgreich. **Echter Produktiv-Altstand auf zweitem Gerät weiterhin nicht abgenommen.** Profil-Link mit `#sync=` ist ein Zugangsschlüssel: **nicht in Issues, Screenshots, Logs oder Dokumentation veröffentlichen**.
 - [ ] Rückfallplan festhalten: vor Merge den bisherigen `main`-Commit notieren; bei Fehlern Deployment auf diesen Stand zurücksetzen. Lokale Daten und Supabase-Events nicht löschen.
 
 **Gate 1:** Erst weiter, wenn Migration, Profiltrennung, Offline-Nachholung und geräteübergreifender Lesetest nachvollziehbar bestanden sind.
 
-**Nachweis / Testergebnis / Datum:** _offen_
+**Teilnachweis (15.11.2026):** GitHub Actions `Persistence smoke` [Run #60](https://github.com/dcomgroup/HBG5-26/actions/runs/43714661655), alle drei Testschritte (`browser-smoke.cjs`, `live-supabase.cjs`, `migration-srs.cjs`) erfolgreich. Im echten Supabase-Profil `milan-a62e5e21` wurden 16 Englisch-Ereignisse aus zwei Testrunden bestätigt. **Noch offen:** echte lokale Altstände erfassen, eindeutige Profilzuordnung, reale Migration aller Apps, vollständige Offline-/Neustart-Abnahme, Rollback-Commit und Langzeit-/Konfliktfälle. Deshalb Gate 1 OFFEN.
 
 ## Phase 2: Geprüften Stand nach main übernehmen
 
@@ -53,9 +53,16 @@
 
 | Gate | Status | Nachweis | Datum |
 | --- | --- | --- | --- |
-| 1. Altstände / Migration | OFFEN | | |
+| 1. Altstände / Migration | TEILWEISE, OFFEN | CI #60, Milan: 16 Events; reale Altstände fehlen | 15.11.2026 |
 | 2. PR-Merge nach main | BLOCKIERT durch Gate 1 | | |
 | 3. GitHub Pages Live-Abnahme | BLOCKIERT durch Gate 2 | | |
 | 4. Issues einzeln umsetzen | BLOCKIERT durch Gate 3 | | |
 
 **Pflege:** Nach jedem Gate dieses Dokument im Repository aktualisieren (Datum, Tester, Commit/PR, Ergebnis). Bei Fehlschlag Gate offen lassen und ein Issue verlinken. Dieses Dokument selbst ändert keine Lernapp.
+
+## Fortsetzung durch Agent (15.11.2026)
+
+- Automatisierte Nachweise anhand des tatsächlich ausgeführten Workflows überprüft: CI #60 erfolgreich, Browser-Simulation, echte Supabase-A→B→A-Synchronisierung und Englisch-Migration mit 48 simulierten Karten.
+- Die automatisierte Migration prüft **nur Englisch und simulierte lokale Bestandsdaten**, nicht die realen lokalen Browserstände des Nutzers. Diese Daten liegen ausschließlich im jeweiligen Browser und können nicht über GitHub oder Supabase ausgelesen werden, solange sie noch nicht migriert wurden.
+- Das Feature enthält außerdem bereits eine erste Umsetzung von Issue #6 (zeitabhängiger Mathe-Fortschritt); vor einem reinen Persistenz-Rollout muss deren Aufnahme ausdrücklich geprüft oder die Änderung getrennt werden.
+- **Entscheidung:** Kein Merge, bevor Gate 1 vollständig nachgewiesen und dokumentiert ist. Die nächste fehlende externe Evidenz ist eine Bestandsaufnahme in einem bereits verwendeten Produktiv-Browser; kein Löschen von Browserdaten.
