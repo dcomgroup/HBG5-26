@@ -5,7 +5,7 @@ const t=window.HBG_CLOUD_TRANSPORT,creds=t?.credentials(location.search,location
 if(!creds){window.HBG_QUICK_CLOUD={enabled:false};return}
 const client=t.createClient(creds),slug=creds.slug,appId="mathe-schnellcheck";
 const key="hbg5-26-mathe-schnellcheck-v1",outboxKey="hbg5-26-schnellcheck-outbox:"+slug;
-let syncing=false,again=false;
+let syncing=false,again=false,lastSuccess=null,lastError=false;
 const pending=()=>{try{const v=JSON.parse(localStorage.getItem(outboxKey)||"[]");return Array.isArray(v)?v:[]}catch{return[]}};
 function record(cardId,state){
  const at=new Date().toISOString(),ev={id:crypto.randomUUID(),appId,cardId:String(cardId),data:{state:{...state}},at};
@@ -19,7 +19,7 @@ async function sync(options={}){
  syncing=true;
  try{
   for(const ev of pending()){await client.append(ev);localStorage.setItem(outboxKey,JSON.stringify(pending().filter(x=>x.id!==ev.id)))}
-  if(options.pushOnly)return [];
+  if(options.pushOnly){lastSuccess=new Date().toISOString();lastError=false;return [];}
   const rows=await client.read(appId);
   let db;try{db=JSON.parse(localStorage.getItem(key)||"{}")}catch{db={}}
   const p=db[slug]||{states:{},rounds:0,answers:0};p.states||={};p._cloudStamps||={};
@@ -57,12 +57,13 @@ async function sync(options={}){
    db[slug]=p;localStorage.setItem(key,JSON.stringify(db));
    again=true;
   }
+  lastSuccess=new Date().toISOString();lastError=false;
   return rows;
- }catch{return null}
+ }catch{lastError=true;return null}
  finally{syncing=false;if(again){again=false;queueMicrotask(()=>void sync())}}
 }
 window.addEventListener("online",()=>void sync());
 window.addEventListener("pageshow",()=>void sync());
 window.addEventListener("focus",()=>void sync());
-window.HBG_QUICK_CLOUD=Object.freeze({enabled:true,slug,record,sync,pending:()=>pending().length});
+window.HBG_QUICK_CLOUD=Object.freeze({enabled:true,slug,record,sync,pending:()=>pending().length,status:()=>({lastSuccess,lastError,pending:pending().length})});
 })();
