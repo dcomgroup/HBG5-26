@@ -23,7 +23,22 @@ async function latinRead(profile){
   };
  });
 }
-function sources(){
+async function latinProfiles(){
+ return new Promise(resolve=>{
+  if(!window.indexedDB)return resolve([]);
+  const req=indexedDB.open("hbg5-26-latein-v1");let created=false;
+  req.onupgradeneeded=()=>{created=true;req.transaction.abort()};
+  req.onerror=()=>resolve([]);
+  req.onsuccess=()=>{
+   const db=req.result;
+   if(created||!db.objectStoreNames.contains("progress")){db.close();resolve([]);return}
+   const keys=db.transaction("progress","readonly").objectStore("progress").getAllKeys();
+   keys.onsuccess=()=>{db.close();resolve(keys.result.filter(k=>typeof k==="string"&&!k.startsWith("__")))};
+   keys.onerror=()=>{db.close();resolve([])};
+  };
+ });
+}
+async function sources(){
  const names=new Set(parse("hbg5-26-local-profile-names")||[]);
  for(const k of ["hbg5-26-mathe-test-01","hbg5-26-englisch-vocab"]){
   for(const n of Object.keys(parse(k)?.profiles||{}))names.add(n);
@@ -31,6 +46,7 @@ function sources(){
  for(const [id,p] of Object.entries(parse("hbg5-26:deutsch:test-01:profiles-v1")?.profiles||{}))names.add(p.profile||id);
  for(const n of parse("hbg5-26-bio-ka01-profiles-v1")||[])names.add(n);
  for(const n of Object.keys(parse("hbg5-26-mathe-schnellcheck-v1")||{}))if(!n.startsWith("_"))names.add(n);
+ for(const n of await latinProfiles())names.add(n);
  return [...names].filter(n=>typeof n==="string"&&n.trim()&&n!=="__demo__").sort();
 }
 function event(appId,cardId,state,at){
@@ -99,13 +115,13 @@ function mount(holder){
  if(!creds)return;
  const button=document.createElement("button");button.textContent="Lokale Lernstände übernehmen";button.type="button";
  holder.append(button);
- button.onclick=()=>{
+ button.onclick=async()=>{
   button.disabled=true;
   const panel=document.createElement("div"),title=document.createElement("p");
   title.textContent="Lokalen Lernstand in dieses Cloud-Profil übernehmen. Vorhandene Cloud-Daten werden niemals überschrieben.";
   const select=document.createElement("select");
   const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="Lokales Quellprofil wählen";select.append(placeholder);
-  sources().filter(n=>n!==creds.slug).forEach(n=>{const o=document.createElement("option");o.value=o.textContent=n;select.append(o)});
+  (await sources()).filter(n=>n!==creds.slug).forEach(n=>{const o=document.createElement("option");o.value=o.textContent=n;select.append(o)});
   const backup=document.createElement("p");
   backup.textContent="Vor der Übernahme unten „Alle lokalen Lernstände exportieren“ ausführen und die JSON-Datei sichern.";
   const check=document.createElement("input");check.type="checkbox";check.id="migration-backup-confirmed";
