@@ -78,6 +78,8 @@ async function sync(options={}){
  }catch{return false}
  finally{syncing=false;if(again){again=false;queueMicrotask(()=>void sync({pushOnly:true}))}}
 }
-window.addEventListener("online",()=>void sync({pushOnly:true}));
+window.addEventListener("online",()=>void sync());
+window.addEventListener("pageshow",()=>void sync());
+window.addEventListener("focus",()=>void sync());
 window.HBG_MATH_CLOUD=Object.freeze({enabled:true,slug,record,sync,pending:()=>queue().length});
 })();
