@@ -71,7 +71,7 @@ async function snapshot(source){
   for(const [id,state] of Object.entries(german.stats||{}))events.push(event("deutsch",id,state));
   for(const log of german.log||[]){
    const entry={...log,cloudId:log.cloudId||crypto.randomUUID()};
-   events.push(event("deutsch","__log__",{entry}));
+   events.push({id:entry.cloudId,appId:"deutsch",cardId:"__log__",data:{entry},at:entry.date||new Date().toISOString()});
   }
  }
  const bio=parse("hbg5-26-bio-ka01-learn-v1-"+source);
