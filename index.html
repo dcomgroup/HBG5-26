@@ -51,7 +51,7 @@ const fromLink=params.get("p")||rawPath;
 let activeProfile=validSlug(fromLink)?fromLink:null;
 const box=document.getElementById("profile-box");
 function profileLinks(){
- document.querySelectorAll(".exam a").forEach(a=>{
+ document.querySelectorAll(".exam a, .upcoming-item a").forEach(a=>{
   const original=a.dataset.originalHref||(a.dataset.originalHref=a.getAttribute("href"));
   const url=new URL(original,document.baseURI);
   url.searchParams.delete("p");url.searchParams.delete("demo");url.hash="";
@@ -263,5 +263,6 @@ function progress(){
 }
 progress();
 orderExams();
+profileLinks();
 window.addEventListener('pageshow',()=>progress());
 </script><script defer src="shared/feedback.js?v=1"></script></body></html>
