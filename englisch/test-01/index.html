@@ -6,6 +6,8 @@ const routeParams=new URLSearchParams(location.search);
 const routedProfile=routeParams.get("p");
 const profileFromHome=routedProfile&&/^[a-z0-9][a-z0-9-]{2,63}$/.test(routedProfile)?routedProfile:null;
 const demoFromHome=routeParams.get("demo")==="1";
+const localFromHome=!profileFromHome&&routeParams.get("local")?.slice(0,40)||null;
+if(localFromHome)name=localFromHome;
 if(profileFromHome){name=profileFromHome;db.profiles[name]||={cards:{}};save()}
 const cloud=window.HBG_ENGLISH_CLOUD;
 function home(){A.innerHTML='<section><label>Lernprofil</label><input id="profile" placeholder="Name" value="'+esc(name)+'"><p><button class="primary" id="start">Runde starten</button></p><small>8 Karteikarten pro Runde. Erst aufdecken, dann selbst bewerten. '+(cloud?.enabled?'Cloud-Lernprofil: Antworten werden lokal gesichert und bei Internetverbindung synchronisiert.':'Lernstand wird auf diesem Gerät gespeichert.')+'</small></section>';document.getElementById("start").onclick=async()=>{if(cloud?.enabled){await cloud.sync();db=JSON.parse(localStorage.getItem(KEY)||'{"profiles":{}}');db.profiles||={}}name=profileFromHome||document.getElementById("profile").value.trim();if(!name)return;db.profiles[name]||={cards:{}};save();start()};if(profileFromHome)document.getElementById("profile").readOnly=true;}
