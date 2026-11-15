@@ -1,0 +1,29 @@
+name: V1 browser persistence smoke
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'shared/**'
+      - 'mathe/**'
+      - 'englisch/**'
+      - 'deutsch/**'
+      - 'biologie/**'
+      - 'latein/**'
+      - 'tests/v1-browser-smoke.cjs'
+      - '.github/workflows/v1-browser-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: mkdir -p /tmp/hbg-v1/HBG5-26 && cp -a . /tmp/hbg-v1/HBG5-26/
+      - run: python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/hbg-v1 &
+      - run: node tests/v1-browser-smoke.cjs
