@@ -26,6 +26,22 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam{background:#fff;border:1px solid #
 <script>
 
 // Profiles are local until a remote sync backend is connected.
+const CLOUD_API="https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/reserve_profile";
+const CLOUD_KEY="sb_publishable_PupDfjNg0FdAGU6yJsxeBg_kGYhgMAS";
+const CLOUD_PREFIX="hbg5-26-cloud-secret:";
+const validSecret=s=>/^[0-9a-f]{64}$/.test(s||"");
+function secretFor(slug){
+ if(!slug)return null;
+ const supplied=new URLSearchParams(location.hash.replace(/^#/,"")).get("sync");
+ if(validSecret(supplied)){localStorage.setItem(CLOUD_PREFIX+slug,supplied);return supplied}
+ const saved=localStorage.getItem(CLOUD_PREFIX+slug);
+ return validSecret(saved)?saved:null;
+}
+async function reserveCloud(slug,secret){
+ const response=await fetch(CLOUD_API,{method:"POST",headers:{apikey:CLOUD_KEY,"Content-Type":"application/json"},body:JSON.stringify({p_slug:slug,p_secret:secret}),cache:"no-store"});
+ if(!response.ok)throw Error("Cloud reservation failed");
+ return response.json();
+}
 const PROFILE_KEY="hbg5-26-active-profile";
 const prefix="/HBG5-26/";
 const params=new URLSearchParams(location.search);
@@ -36,10 +52,15 @@ let activeProfile=validSlug(fromLink)?fromLink:null;
 const box=document.getElementById("profile-box");
 function profileLinks(){
  document.querySelectorAll(".exam a").forEach(a=>{
- const url=new URL(a.getAttribute("href"),document.baseURI);
- if(activeProfile)url.searchParams.set("p",activeProfile);
- else url.searchParams.set("demo","1");
- a.href=url.href;
+  const original=a.dataset.originalHref||(a.dataset.originalHref=a.getAttribute("href"));
+  const url=new URL(original,document.baseURI);
+  url.searchParams.delete("p");url.searchParams.delete("demo");url.hash="";
+  if(activeProfile){
+   url.searchParams.set("p",activeProfile);
+   const secret=secretFor(activeProfile);
+   if(secret)url.hash="sync="+secret;
+  }else url.searchParams.set("demo","1");
+  a.href=url.href;
  });
 }
 const RESERVED_PROFILES=new Set(["index","404","shared","mathe","deutsch","biologie","latein","englisch","test","demo","admin"]);
@@ -60,7 +81,17 @@ function freshSuggestions(){
 function showProfile(){
  if(activeProfile){
   localStorage.setItem(PROFILE_KEY,activeProfile);
-  box.innerHTML='<strong>Lokales Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Dein Lernfortschritt wird nur in diesem Browser gespeichert. Dieses Profil wird noch nicht mit anderen Geräten synchronisiert.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testmodus öffnen</button></p><p class="hint">Cloud-Lernprofile werden nach der Supabase-Integration freigeschaltet.</p>';
+  const cloudSecret=secretFor(activeProfile);
+  if(cloudSecret){
+   box.innerHTML='<strong>Cloud-Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Persönlicher Link für mehrere Geräte. Wer diesen vollständigen Link besitzt, kann auf den Lernstand zugreifen. Nicht öffentlich teilen.</p><p><code id="profile-link"></code></p><p><button id="copy-profile">Persönlichen Link kopieren</button> <button id="switch-profile">Anderes Profil auswählen</button></p><p class="hint">Cloud-Synchronisierung im Test: Mathe und Englisch. Weitere Apps folgen.</p>';
+   document.getElementById("active-profile-name").textContent=activeProfile;
+   const personal=new URL(prefix,location.origin);personal.searchParams.set("p",activeProfile);personal.hash="sync="+cloudSecret;
+   document.getElementById("profile-link").textContent=personal.href;
+   document.getElementById("copy-profile").onclick=async()=>{try{await navigator.clipboard.writeText(personal.href)}catch{document.getElementById("profile-link").textContent=personal.href}};
+   document.getElementById("switch-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
+   profileLinks();return;
+  }
+  box.innerHTML='<strong>Lokales Lernprofil: <span id="active-profile-name"></span></strong><p class="hint">Dein Lernfortschritt wird nur in diesem Browser gespeichert. Dieses Profil wird noch nicht mit anderen Geräten synchronisiert.</p><p><button id="switch-profile">Anderes Profil auswählen</button> <button id="demo-profile">Testmodus öffnen</button></p><p class="hint">Cloud-Lernprofile werden derzeit im Entwicklungsbranch getestet.</p>';
   document.getElementById("active-profile-name").textContent=activeProfile;
   document.getElementById("switch-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
   document.getElementById("demo-profile").onclick=()=>{activeProfile=null;history.replaceState(null,"",prefix);showProfile()};
