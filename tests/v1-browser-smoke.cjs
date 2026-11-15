@@ -87,6 +87,19 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   const state=await b.evaluate(slug=>JSON.parse(localStorage.getItem("hbg5-26-englisch-vocab")).profiles[slug].cards,slug);
   assert.equal(Object.values(state).filter(x=>x.right===1).length,1);
   await other.close();
+  // A second answer during a network outage must remain in the local outbox,
+  // then upload exactly once when connectivity returns.
+  await cloud.setOffline(true);
+  await a.getByRole("button",{name:"Lösung aufdecken"}).click();
+  await a.getByRole("button",{name:"Gewusst",exact:true}).click();
+  await a.waitForFunction(()=>JSON.parse(localStorage.getItem("hbg5-26-englisch-outbox:qa-cloud-profile")||"[]").length===1);
+  assert.equal(events.length,1,"offline answer must not reach the cloud");
+  await cloud.setOffline(false);
+  await a.evaluate(()=>window.HBG_ENGLISH_CLOUD.sync());
+  await a.waitForFunction(()=>JSON.parse(localStorage.getItem("hbg5-26-englisch-outbox:qa-cloud-profile")||"[]").length===0);
+  assert.equal(events.length,2,"offline answer should upload on reconnection");
+  await a.evaluate(()=>window.HBG_ENGLISH_CLOUD.sync());
+  assert.equal(events.length,2,"retry must not duplicate the offline answer");
   const invalid=await browser.newContext();
   await invalid.route("https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/**",route=>route.fulfill({status:403,body:"{}"}));
   const bad=await invalid.newPage();
