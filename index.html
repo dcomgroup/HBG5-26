@@ -154,7 +154,7 @@ function show(card,value,description){
 function progress(){
  const cards=[...document.querySelectorAll('.exam')],mathe=safeParse('hbg5-26-mathe-test-01');
  const mp=mathe?.profiles||{},mn=Object.keys(mp)[0],ms=mp[mn];
- show(cards[0],ms?percent(Object.values(ms.cards||{}).filter(s=>s.level>=3).length,33):null,'sichere Aufgabentypen · '+(mn||'kein Profil'));
+ show(cards[0],ms?percent(Object.values(ms.cards||{}).filter(s=>(s.level||0)>=2).length,33):null,'sichere Aufgabentypen · '+(mn||'kein Profil'));
  const de=safeParse('hbg5-26:deutsch:test-01:profiles-v1'),dp=de?.profiles?.[de.active],ds=dp?.stats;
  show(cards[1],ds?percent(Object.values(ds).filter(s=>s.streak>=2).length,90):null,'Aufgaben mindestens zweimal in Folge richtig · '+(dp?.profile||''));
  const bioProfile=localStorage.getItem('hbg5-26-bio-ka01-profile-v1')||'Kind 1';
