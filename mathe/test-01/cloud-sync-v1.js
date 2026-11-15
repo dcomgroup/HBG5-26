@@ -16,6 +16,7 @@ function record(cardId,state){
  localStorage.setItem(outboxKey,JSON.stringify([...queue(),event]));
  state._cloudAt=Date.parse(at);
  void sync({pushOnly:true});
+ return event;
 }
 async function sync(options={}){
  if(syncing){again=true;return false}
