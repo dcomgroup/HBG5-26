@@ -38,8 +38,14 @@ async function sync(options={}){
    if(id==="__totals__"){
     if((p.answers||p.rounds)&&!p._cloudTotalsAt)continue;
     if(stamp>Number(p._cloudTotalsAt||0)){
-     p.answers=Math.max(0,Number(state.answers)||0);
-     p.rounds=Math.max(0,Number(state.rounds)||0);
+     const remoteAnswers=Math.max(0,Number(state.answers)||0);
+     const remoteRounds=Math.max(0,Number(state.rounds)||0);
+     if(remoteAnswers<Number(p.answers||0)||remoteRounds<Number(p.rounds||0)){
+      window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:id,reason:"remote-totals-regressed"}}));
+      continue;
+     }
+     p.answers=remoteAnswers;
+     p.rounds=remoteRounds;
      p._cloudTotalsAt=stamp;changed=true;
     }
    }else if(/^\d{1,3}$/.test(id)){
