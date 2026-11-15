@@ -96,6 +96,33 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   assert.ok(badLink.includes("demo=1"));
   assert.ok(!badLink.includes("#sync="));
   await invalid.close();
+  const migrationEvents=[];
+  const migrationContext=await browser.newContext();
+  await migrationContext.route("https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/**",async route=>{
+   const name=route.request().url().split("/").pop(),p=route.request().postDataJSON();
+   if(p.p_slug!=="migration-cloud"||p.p_secret!==secret){await route.fulfill({status:403,body:"{}"});return}
+   if(name==="read_learning_events"){await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(migrationEvents.filter(e=>e.app_id===p.p_app_id))});return}
+   if(name==="append_learning_event"){
+    if(!migrationEvents.some(e=>e.event_id===p.p_event_id))migrationEvents.push({event_id:p.p_event_id,app_id:p.p_app_id,card_id:p.p_card_id,event_data:p.p_event_data,occurred_at:p.p_occurred_at});
+    await route.fulfill({status:200,contentType:"application/json",body:"true"});return;
+   }
+   await route.fulfill({status:404,body:"{}"});
+  });
+  const migrationPage=await migrationContext.newPage();
+  await migrationPage.goto(base);
+  await migrationPage.evaluate(()=>localStorage.setItem("hbg5-26-mathe-test-01",JSON.stringify({profiles:{CE:{cards:{"0":{level:2,right:2,wrong:0}},rounds:5,answers:40}}})));
+  await migrationPage.goto(base+"?p=migration-cloud#sync="+secret);
+  await migrationPage.getByText("Cloud-Profil bestätigt.",{exact:true}).waitFor();
+  await migrationPage.getByRole("button",{name:"Lokale Lernstände übernehmen"}).click();
+  await migrationPage.locator("#migration select").selectOption("CE");
+  await migrationPage.locator("#migration input[type=checkbox]").check();
+  await migrationPage.getByRole("button",{name:"Übernahme prüfen"}).click();
+  await migrationPage.getByRole("button",{name:"Ja, jetzt in Supabase übernehmen"}).click();
+  await migrationPage.getByText(/2 Einträge bestätigt/).waitFor();
+  assert.equal(migrationEvents.length,2);
+  const original=await migrationPage.evaluate(()=>JSON.parse(localStorage.getItem("hbg5-26-mathe-test-01")).profiles.CE.answers);
+  assert.equal(original,40);
+  await migrationContext.close();
   await cloud.close();
   console.log("PASS: browser local profile confirmation, Math/English handoff, cloud link and A-to-B sync");
  }finally{await browser.close()}
