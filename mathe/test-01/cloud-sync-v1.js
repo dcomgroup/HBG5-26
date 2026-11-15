@@ -5,8 +5,15 @@
 "use strict";
 const transport=window.HBG_CLOUD_TRANSPORT;
 const creds=transport?.credentials(location.search,location.hash,localStorage);
-if(!creds){window.HBG_MATH_CLOUD={enabled:false};return}
-const client=transport.createClient(creds),slug=creds.slug,appId="mathe";
+const slug=new URLSearchParams(location.search).get("p");
+if(!slug||!/^[a-z0-9][a-z0-9-]{2,63}$/.test(slug)){window.HBG_MATH_CLOUD={enabled:false};return}
+const appId="mathe";
+const client=creds?transport.createClient(creds):(()=>{
+ const endpoint="https://velspjtxenbvvwgptahh.supabase.co/rest/v1/rpc/";
+ const key="sb_publishable_PupDfjNg0FdAGU6yJsxeBg_kGYhgMAS";
+ async function rpc(fn,payload){const response=await fetch(endpoint+fn,{method:"POST",headers:{apikey:key,"Content-Type":"application/json"},body:JSON.stringify({p_slug:slug,...payload}),cache:"no-store"});if(!response.ok)throw Error("Math cloud HTTP "+response.status);return response.json()}
+ return {read:()=>rpc("read_math_link_events",{}),append:ev=>rpc("append_math_link_event",{p_event_id:ev.id,p_card_id:ev.cardId,p_event_data:ev.data,p_occurred_at:ev.at})};
+})();
 const stateKey="hbg5-26-mathe-test-01",outboxKey="hbg5-26-mathe-outbox:"+slug;
 let syncing=false,again=false;
 const queue=()=>{try{const v=JSON.parse(localStorage.getItem(outboxKey)||"[]");return Array.isArray(v)?v:[]}catch{return[]}};
