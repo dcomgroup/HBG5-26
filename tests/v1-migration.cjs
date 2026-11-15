@@ -1,6 +1,6 @@
 const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("node:vm");
 const slug="target-cloud",secret="e".repeat(64),storage=new Map(),events=[],window={};
-let online=true,n=0;
+let online=true,n=0,failAfter=null;
 const localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
 const source="CE";
 const fixtures={
@@ -19,6 +19,8 @@ const context={window,localStorage,URLSearchParams,location:{search:"?p="+slug,h
   const p=JSON.parse(options.body);assert.equal(p.p_slug,slug);
   if(url.endsWith("read_learning_events"))return{ok:true,json:async()=>events.filter(e=>e.app_id===p.p_app_id)};
   if(url.endsWith("append_learning_event")){
+   if(failAfter===0)throw Error("temporary network failure");
+   if(failAfter!==null)failAfter--;
    if(!events.some(e=>e.event_id===p.p_event_id))events.push({event_id:p.p_event_id,app_id:p.p_app_id,card_id:p.p_card_id,event_data:p.p_event_data,occurred_at:p.p_occurred_at});
    return{ok:true,json:async()=>true};
   }
@@ -33,8 +35,9 @@ const api=window.HBG_V1_MIGRATE,creds=window.HBG_CLOUD_TRANSPORT.credentials(con
  const {key,plan}=await api.prepare(source,creds);
  assert.equal(plan.skipped,0);
  assert.equal(plan.events.length,8); // Math 2, Schnellcheck 2, English 1, German 2, Bio 1
- online=false;await assert.rejects(()=>api.execute(key,creds));
- online=true;const result=await api.execute(key,creds);
+ failAfter=2;await assert.rejects(()=>api.execute(key,creds));
+ assert.equal(events.length,2,"two events should already be safely committed");
+ failAfter=null;const result=await api.execute(key,creds);
  assert.equal(result.imported,plan.events.length);
  await api.execute(key,creds);assert.equal(events.length,plan.events.length);
  assert.ok(events.some(e=>e.app_id==="deutsch"&&e.card_id==="__log__"&&e.event_data.entry));
