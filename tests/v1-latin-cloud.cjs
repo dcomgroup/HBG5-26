@@ -1,5 +1,5 @@
 const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("node:vm");
-const slug="latin-cloud",,storage=new Map(),events=[],window={addEventListener(){}};
+const slug="latin-cloud",storage=new Map(),events=[],window={addEventListener(){}};
 let online=false,n=0;
 const localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
 const context={window,location:{search:"?p="+slug},localStorage,URLSearchParams,queueMicrotask,
