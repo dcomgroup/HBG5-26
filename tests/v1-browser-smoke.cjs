@@ -49,6 +49,6 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   await cloudPage.waitForFunction(()=>JSON.parse(localStorage.getItem("hbg5-26-englisch-klassenarbeit-01-outbox:qa-cloud-profile")||"[]").length===0);
   assert.ok(events.some(e=>e.app_id==="englisch-klassenarbeit-01"),"classwork progress must sync to its separate app stream");
   await cloud.close();
-  console.log("PASS: English classwork local rounds, persistence, URL-only cloud sync and profile isolation");
+  console.log("PASS: English classwork practice, persistence and URL-only cloud sync");
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
