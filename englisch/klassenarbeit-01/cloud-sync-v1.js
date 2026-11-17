@@ -22,7 +22,9 @@ async function sync(options={}){
   for(const row of rows){if(!/^u[1-6]-[a-z0-9-]+$/.test(row.card_id||""))continue;const d=Date.parse(row.occurred_at)||0;if(!latest.has(row.card_id)||d>latest.get(row.card_id).d)latest.set(row.card_id,{d,state:row.event_data?.state})}
   let changed=false;
   for(const [id,x] of latest){const remote=x.state,localCard=p.cards[id];if(!remote)continue;if(queue().some(e=>e.cardId===id))continue;
-   if(localCard&&Number(remote.right||0)+Number(remote.wrong||0)<Number(localCard.right||0)+Number(localCard.wrong||0))continue;
+   const remoteCount=Number(remote.right||0)+Number(remote.wrong||0),localCount=Number(localCard?.right||0)+Number(localCard?.wrong||0);
+   if(localCard&&remoteCount<localCount){window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:id,reason:"remote-attempt-count-regressed"}}));continue}
+   if(localCard&&remoteCount===localCount&&(Number(remote.right||0)!==Number(localCard.right||0)||Number(remote.wrong||0)!==Number(localCard.wrong||0))){window.dispatchEvent(new CustomEvent("hbg-cloud-conflict",{detail:{appId,cardId:id,reason:"divergent-equal-attempts"}}));continue}
    if(!localCard||x.d>Number(localCard._cloudAt||0)){p.cards[id]={...remote,_cloudAt:x.d};changed=true}
   }
   if(changed)localStorage.setItem(stateKey,JSON.stringify(db));
