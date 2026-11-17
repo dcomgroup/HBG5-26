@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Englisch · HBG5-26</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#172235;background:#f6f8fc}
+*{box-sizing:border-box}body{max-width:680px;margin:0 auto;padding:28px 18px 70px}
+header a{color:#2458b8;text-decoration:none}h1{font-size:2rem;margin:8px 0 0}
+header p{color:#667386;margin:4px 0 26px}
+section{background:#fff;border:1px solid #e4e9f1;border-radius:15px;padding:18px;margin:12px 0;box-shadow:0 2px 8px #1d30400a}
+section a{display:block;color:#2458b8;text-decoration:none;font-weight:650;font-size:1.08rem}
+section a:hover,header a:hover{text-decoration:underline}.meta{font-size:.9rem;color:#637084;margin:7px 0 0}
+</style>
+</head>
+<body>
+<header><a href="../">‹ HBG5-26 Übersicht</a><h1>Englisch</h1><p>Wähle, womit du üben möchtest.</p></header>
+<main>
+<section><a class="app-link" href="test-01/">Vokabeltraining 01: Theme 1 · New in Camden</a><p class="meta">48 Vokabeln als Karteikarten, mit Selbsteinschätzung und Wiederholungen.</p></section>
+<section><a class="app-link" href="klassenarbeit-01/">Klassenarbeit 01: Camden Town 5 · Units 1–6</a><p class="meta">Übungsaufgaben zu Wortschatz und Grammatik der ersten sechs Units.</p></section>
+</main>
+<script>
+const params=new URLSearchParams(location.search);
+document.querySelectorAll(".app-link").forEach(link=>{
+ const url=new URL(link.getAttribute("href"),location.href);
+ ["p","local","demo"].forEach(key=>{const value=params.get(key);if(value)url.searchParams.set(key,value)});
+ link.href=url.href;
+});
+</script>
+</body>
+</html>
