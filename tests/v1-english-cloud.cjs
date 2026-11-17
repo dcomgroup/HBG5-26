@@ -1,24 +1,24 @@
 const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const vm=require("node:vm");
-const secret="a".repeat(64),slug="test-cloud-profile";
+const slug="test-cloud-profile";
 const storage=new Map(),events=[],listeners={};
 let online=false,sequence=0;
 const localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
 const window={addEventListener:(name,cb)=>{listeners[name]=cb},dispatchEvent:()=>{}};
 const context={
- window,localStorage,location:{search:"?p="+slug,hash:"#sync="+secret},
+ window,localStorage,location:{search:"?p="+slug},
  URLSearchParams,crypto:{randomUUID:()=>("00000000-0000-4000-8000-"+String(++sequence).padStart(12,"0"))},
  CustomEvent:class{constructor(name,options){this.type=name;this.detail=options.detail}},
  queueMicrotask,fetch:async (url,options)=>{
   if(!online)throw Error("offline");
   const data=JSON.parse(options.body);
-  assert.equal(data.p_slug,slug);assert.equal(data.p_secret,secret);
-  if(url.endsWith("append_learning_event")){
+  assert.equal(data.p_slug,slug);
+  if(url.endsWith("hbg_append_event")){
    if(!events.some(e=>e.event_id===data.p_event_id))events.push({event_id:data.p_event_id,card_id:data.p_card_id,event_data:data.p_event_data,occurred_at:data.p_occurred_at});
    return {ok:true,json:async()=>true};
   }
-  if(url.endsWith("read_learning_events"))return{ok:true,json:async()=>events};
+  if(url.endsWith("hbg_read_events"))return{ok:true,json:async()=>events};
   throw Error("unexpected RPC");
  }};
 window.fetch=context.fetch;

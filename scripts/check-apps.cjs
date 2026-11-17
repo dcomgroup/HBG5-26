@@ -1,5 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const pages=['index.html','mathe/test-01/index.html','deutsch/test-01/index.html','biologie/klassenarbeit-01/index.html','englisch/test-01/index.html','latein/test-01/index.html','latein/test-02/index.html'];
+const pages=['index.html','mathe/test-01/index.html','deutsch/test-01/index.html','biologie/klassenarbeit-01/index.html','englisch/test-01/index.html','englisch/klassenarbeit-01/index.html','latein/test-01/index.html','latein/test-02/index.html'];
 let failures=0;
 function check(code,label){try{new vm.Script(code,{filename:label});console.log('OK',label)}catch(e){console.error('FAIL',label,e.message);failures++}}
 function walk(dir){for(const ent of fs.readdirSync(dir,{withFileTypes:true})){if(ent.name==='.git'||ent.name==='node_modules')continue;const p=path.join(dir,ent.name);if(ent.isDirectory())walk(p);else if(p.endsWith('.js'))check(fs.readFileSync(p,'utf8'),p)}}
