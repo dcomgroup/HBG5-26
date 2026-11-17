@@ -1,5 +1,5 @@
 const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("node:vm");
-const slug="target-cloud",secret="e".repeat(64),storage=new Map(),events=[],window={};
+const slug="target-cloud",,storage=new Map(),events=[],window={};
 let online=true,n=0,failAfter=null;
 const localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
 const source="CE";
@@ -12,13 +12,13 @@ const fixtures={
 };
 for(const [k,v] of Object.entries(fixtures))localStorage.setItem(k,JSON.stringify(v));
 const before=Object.fromEntries([...storage.entries()]);
-const context={window,localStorage,URLSearchParams,location:{search:"?p="+slug,hash:"#sync="+secret},
+const context={window,localStorage,URLSearchParams,location:{search:"?p="+slug},
  crypto:{randomUUID:()=>("55555555-5555-4555-8555-"+String(++n).padStart(12,"0"))},
  fetch:async(url,options)=>{
   if(!online)throw Error("offline");
   const p=JSON.parse(options.body);assert.equal(p.p_slug,slug);
-  if(url.endsWith("read_learning_events"))return{ok:true,json:async()=>events.filter(e=>e.app_id===p.p_app_id)};
-  if(url.endsWith("append_learning_event")){
+  if(url.endsWith("hbg_read_events"))return{ok:true,json:async()=>events.filter(e=>e.app_id===p.p_app_id)};
+  if(url.endsWith("hbg_append_event")){
    if(failAfter===0)throw Error("temporary network failure");
    if(failAfter!==null)failAfter--;
    if(!events.some(e=>e.event_id===p.p_event_id))events.push({event_id:p.p_event_id,app_id:p.p_app_id,card_id:p.p_card_id,event_data:p.p_event_data,occurred_at:p.p_occurred_at});
