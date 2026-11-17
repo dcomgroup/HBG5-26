@@ -44,6 +44,7 @@ const base="http://127.0.0.1:8765/HBG5-26/";
   assert.equal(await cloudPage.locator("#profile").inputValue(),slug);
   assert.equal(await cloudPage.locator("#profile").getAttribute("readonly"),"");
   await cloudPage.getByRole("button",{name:"Runde starten"}).click();
+  await cloudPage.locator(".choices button").first().waitFor();
   assert.match(await cloudPage.locator("#app").innerText(),/Aufgabe 1 von 8/);
   await cloudPage.locator(".choices button").first().click();
   await cloudPage.waitForFunction(()=>JSON.parse(localStorage.getItem("hbg5-26-englisch-klassenarbeit-01-outbox:qa-cloud-profile")||"[]").length===0);
