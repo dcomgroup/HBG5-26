@@ -1,5 +1,5 @@
 const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("node:vm");
-const slug="target-cloud",,storage=new Map(),events=[],window={};
+const slug="target-cloud",storage=new Map(),events=[],window={};
 let online=true,n=0,failAfter=null;
 const localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
 const source="CE";
