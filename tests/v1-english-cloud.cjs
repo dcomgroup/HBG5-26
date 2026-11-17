@@ -1,7 +1,7 @@
 const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const vm=require("node:vm");
-const ,slug="test-cloud-profile";
+const slug="test-cloud-profile";
 const storage=new Map(),events=[],listeners={};
 let online=false,sequence=0;
 const localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
