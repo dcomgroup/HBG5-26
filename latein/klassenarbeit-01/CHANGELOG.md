@@ -1,5 +1,7 @@
 # Changelog
 
+- v1.5.3 (2026-11-21): Einmaliger Reset-Knopf ausschließlich für Panda-Latein. Nach Betätigung wird der Knopf mit lokalem dauerhaften Marker ausgeblendet. Reset nur bei leerer Cloud-Latein-Historie und leerer Outbox. Andere Profile und Fächer unberührt.
+
 - v1.5.2 (2026-11-21): Unerwünschten Reset-Knopf entfernt. Keine Lernstände verändert. Selektive Rücknahme heutiger lokaler Testantworten erfordert Zugriff auf die Browserdaten; ältere Stände bleiben geschützt.
 
 - v1.5.1 (2026-11-21): Bestätigter Panda-Reset für den lokalen Latein-Lernstand. Nur bei leerer Cloud-Historie und Outbox. Andere Fächer bleiben unverändert.
