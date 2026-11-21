@@ -64,21 +64,7 @@ function render(){
   if(names().some(n=>n.toLocaleLowerCase("de")===name.toLocaleLowerCase("de"))){message.textContent="Dieses Profil gibt es bereits. Bitte über das Dropdown auswählen.";return}
   choose(name);
  };
- if(current){
-  const remove=document.createElement("button");remove.textContent="Profil und lokale Lernstände löschen";remove.style.marginTop="12px";remove.style.background="#fff";remove.style.color="#9b1c1c";remove.style.borderColor="#c98a8a";root.append(remove);
-  remove.onclick=async()=>{
-   if(!confirm('Das lokale Profil "'+current+'" und seine Lernstände in allen Lernapps auf diesem Gerät löschen? Cloud-Daten bleiben erhalten.'))return;
-   if(!confirm('Wirklich dauerhaft löschen? Bei Bedarf vorher die lokalen Lernstände exportieren.'))return;
-   remove.disabled=true;
-   try{
-    await erase(current);
-    const entries=(parse(REGISTRY)||[]).filter(n=>n!==current);
-    localStorage.setItem(REGISTRY,JSON.stringify(entries));
-    localStorage.removeItem(SELECT);
-    location.reload();
-   }catch(err){remove.disabled=false;message.textContent="Löschen fehlgeschlagen: "+err.message}
-  };
- }
+
  setLinks();
 }
 async function erase(name){
