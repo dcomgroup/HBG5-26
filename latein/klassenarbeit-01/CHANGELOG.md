@@ -1,6 +1,7 @@
 # Changelog
 
-- v1.4.0 (2026-11-21): Alle 58 eindeutigen Vokabelkarten aus Lektionen 1 und 2 haben jetzt grammatische Angaben. Vorhandene Buchangaben aus dem Archiv bleiben unverändert, 27 fehlende Einträge wurden anhand der lateinischen Formen grammatisch ergänzt und ausdrücklich als Ergänzung gekennzeichnet. Vollständigkeit des Kartenbestands gegen beide Datenquellen geprüft. Keine Änderungen an Fortschrittsdaten oder Supabase.
+- v1.5.0 (2026-11-21): Nach UX-Freigabe bestehende URL-only-Supabase-Anbindung der Latein-App für Klassenarbeit 01 eingebunden. Vokabelstände verwenden dieselben Cloud-Karten-IDs wie bestehender Lateintrainer; Grammatikfragen erhalten eigene IDs. Lokale IndexedDB- und localStorage-Stände bleiben bestehen; Cloud-Ereignisse werden beim Start vorsichtig zusammengeführt, Offline-Outbox bleibt aktiv. Keine Schemaänderung. Zwei-Geräte-/Browser-Abnahme und Offline-Konflikttests noch offen.
+- v1.4.0 (2026-11-21): 58 Vokabeln mit grammatischen Angaben.
 - v1.3.2 (2026-11-21): Fehlende Buchangaben kenntlich gemacht.
 - v1.3.1 (2026-11-21): Buchangaben in vorhandene Karten integriert.
 - v1.3.0 (2026-11-21): Archivierte Buchangaben ergänzt.
