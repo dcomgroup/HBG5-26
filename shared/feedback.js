@@ -12,20 +12,24 @@ const css=document.createElement("style");css.textContent=`
 const btn=document.createElement("button");btn.id="hbg-feedback-button";btn.textContent="🐞 Fehler melden";document.body.append(btn);
 btn.onclick=()=>{
  const overlay=document.createElement("div");overlay.id="hbg-feedback-overlay";overlay.setAttribute("role","dialog");overlay.setAttribute("aria-modal","true");
- overlay.innerHTML='<div id="hbg-feedback-panel"><h2>Fehler melden</h2><p>Was funktioniert nicht?</p><textarea id="hbg-feedback-text" maxlength="4000" placeholder="Beschreibe kurz, was passiert ist."></textarea><p class="small">Die App-Seite und Version werden mitgesendet. Bitte keine Namen oder persönlichen Daten eintragen.</p><button class="primary" id="hbg-feedback-send">Meldung vorbereiten</button> <button id="hbg-feedback-close">Abbrechen</button><p class="small" id="hbg-feedback-status">Zum Absenden öffnet sich GitHub. Dafür ist ein GitHub-Konto erforderlich.</p></div>';
+ overlay.innerHTML='<div id="hbg-feedback-panel"><h2>Fehler melden</h2><p>Was funktioniert nicht?</p><textarea id="hbg-feedback-text" maxlength="4000" placeholder="Beschreibe kurz, was passiert ist."></textarea><p class="small">Die App-Seite und Version werden mitgesendet. Bitte keine Namen oder persönlichen Daten eintragen.</p><button class="primary" id="hbg-feedback-send">Fehler melden</button> <button id="hbg-feedback-close">Abbrechen</button><p class="small" id="hbg-feedback-status">Die Meldung wird direkt übermittelt. Kein Konto erforderlich.</p></div>';
  document.body.append(overlay);const area=overlay.querySelector("textarea");area.focus();
  overlay.querySelector("#hbg-feedback-close").onclick=()=>overlay.remove();
  overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
- overlay.querySelector("#hbg-feedback-send").onclick=()=>{
-  const description=area.value.trim();if(description.length<8){overlay.querySelector("#hbg-feedback-status").textContent="Bitte beschreibe den Fehler mit mindestens 8 Zeichen.";return}
+ overlay.querySelector("#hbg-feedback-send").onclick=async()=>{
+  const description=area.value.trim(),status=overlay.querySelector("#hbg-feedback-status"),send=overlay.querySelector("#hbg-feedback-send");
+  if(description.length<8){status.textContent="Bitte beschreibe den Fehler mit mindestens 8 Zeichen.";return}
   const version=document.querySelector('meta[name="app-version"]')?.content||"nicht angegeben";
-  const page=location.origin+location.pathname;
-  const body="### Fehlerbeschreibung\n"+description+"\n\n### Technische Angaben\n- Seite: "+page+"\n- App-Version: "+version+"\n- Zeitpunkt: "+new Date().toISOString()+"\n\nAutomatisch aus der Lernapp vorbereitet. Keine Lernstände übertragen.";
-  const title="[Lernapp] Fehlermeldung: "+description.slice(0,70);
-  const target="https://github.com/dcomgroup/HBG5-26/issues/new?"+new URLSearchParams({title,body}).toString();
-  const link=document.createElement("a");link.href=target;link.target="_blank";link.rel="noopener noreferrer";link.click();
-  overlay.querySelector("#hbg-feedback-status").textContent="GitHub wurde geöffnet. Bitte dort auf „Submit new issue“ klicken. Falls nichts geöffnet wurde, Link kopieren.";
-  if(!overlay.querySelector("#hbg-feedback-copy")){const copy=document.createElement("button");copy.id="hbg-feedback-copy";copy.textContent="Meldelink kopieren";copy.onclick=()=>navigator.clipboard.writeText(target);overlay.querySelector("#hbg-feedback-panel").append(copy)}
- };
+  send.disabled=true;status.textContent="Meldung wird gesendet …";
+  try{
+   const response=await fetch("https://velspjtxenbvvwgptahh.supabase.co/rest/v1/hbg_feedback_reports",{
+    method:"POST",headers:{"apikey":"sb_publishable_PupDfjNg0FdAGU6yJsxeBg_kGYhgMAS","Content-Type":"application/json","Prefer":"return=minimal"},
+    body:JSON.stringify({description,page_path:location.pathname,app_version:version})
+   });
+   if(!response.ok)throw Error("HTTP "+response.status);
+   status.textContent="Danke, die Fehlermeldung wurde gespeichert.";
+   send.textContent="Gesendet";area.disabled=true;
+  }catch(error){status.textContent="Senden fehlgeschlagen. Bitte später erneut versuchen.";send.disabled=false}
+ }
 };
 })();
