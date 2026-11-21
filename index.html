@@ -19,8 +19,14 @@ h2{font-size:1.25rem;margin:26px 0 10px}.exam,.resource{background:#fff;border:1
 .done{background:#f0f1f3;border-color:#e0e3e8;box-shadow:none}.done a{color:#667386}.done .meta{color:#78828c}
 .upcoming{margin:20px 0 28px}.upcoming h2{margin-bottom:10px}.upcoming-list{background:#fff;border:1px solid #e4e9f1;border-radius:15px;padding:4px 16px}.upcoming-item{padding:12px 0;border-bottom:1px solid #edf0f4}.upcoming-item:last-child{border-bottom:0}.upcoming-item a{color:#2458b8;font-weight:650;text-decoration:none}.upcoming-item .meta{margin-top:3px}
 .profile-box{background:#fff;border:1px solid #dfe5ee;border-radius:16px;padding:18px;margin:18px 0}.profile-box input,.profile-box select,.profile-box button{font:inherit;padding:10px;border-radius:9px;border:1px solid #b9c5d6}.profile-box button{background:#2458b8;color:white;cursor:pointer}.profile-box button:disabled{background:#e5e9ef;color:#667386;cursor:not-allowed}.profile-box .hint{font-size:.85rem;color:#627084}.profile-box .error{color:#ad2525}.profile-box code{overflow-wrap:anywhere}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+#settings-toggle{border:0;background:transparent;color:#172235;padding:10px;cursor:pointer;border-radius:10px}
+#settings-toggle:focus-visible{outline:2px solid #2458b8}
+#settings-panel{margin:12px 0 22px}
+#settings-panel[hidden]{display:none}
+#profile-box[hidden],#local-profile-manager[hidden]{display:none}
 </style></head><body>
-<header><h1>HBG5-26</h1><p>Lernapps für das Schuljahr 2026/27</p></header><div class="profile-box" id="profile-box"></div><div class="profile-box" id="local-profile-manager" hidden><h3>Lokales Lernprofil</h3><p>Profilverwaltung wird geladen …</p></div>
+<header><div><h1>HBG5-26</h1><p>Lernapps für das Schuljahr 2026/27</p></div><button type="button" id="settings-toggle" aria-label="Einstellungen öffnen" aria-expanded="false" aria-controls="settings-panel"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button></header><div id="settings-panel" hidden><div class="profile-box" id="profile-box"></div><div class="profile-box" id="local-profile-manager" hidden><h3>Lokales Lernprofil</h3><p>Profilverwaltung wird geladen …</p></div></div>
 <nav class="upcoming" aria-label="Nächste Prüfungen"><h2>Als Nächstes dran</h2><div class="upcoming-list" id="upcoming-list"></div></nav>
 <section><h2>Mathe</h2><article class="exam" data-date="2026-11-23"><a href="mathe/test-01/">Klassenarbeit 01: Geometrie</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
 <section><h2>Deutsch</h2><article class="exam" data-date="2026-11-16"><a href="deutsch/test-01/">Test 01: Nomen, Kasus, Pronomen und Adjektive</a><div class="meta"></div><div class="track"><div class="fill"></div></div><div class="track-label">Lernfortschritt noch nicht verfügbar</div></article></section>
@@ -50,6 +56,14 @@ if(!requested&&!params.has("local")&&!params.has("demo")){
  }catch(error){console.warn("Profil-Wiederherstellung nicht verfügbar",error)}
 }
 let activeProfile=null;
+const settingsToggle=document.getElementById("settings-toggle");
+const settingsPanel=document.getElementById("settings-panel");
+settingsToggle.addEventListener("click",()=>{
+ const open=settingsPanel.hidden;
+ settingsPanel.hidden=!open;
+ settingsToggle.setAttribute("aria-expanded",String(open));
+ settingsToggle.setAttribute("aria-label",open?"Einstellungen schließen":"Einstellungen öffnen");
+});
 const box=document.getElementById("profile-box");
 const localExportSection=document.getElementById("local-export-section");
 const localManager=document.getElementById("local-profile-manager");
