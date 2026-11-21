@@ -19,17 +19,17 @@ Bei fotografisch schwer lesbaren Feldern wurden nur sprachlich sicher rekonstrui
 - legere|legō, lēgī|lesen
 - nārrāre|nārrō, nārrāvī|erzählen
 - quondam|Adv.|einst
-- Gallus, Galla|Gallī m.; Gallae f.|gallisch; der Gallier
+- Gallus| -a, -um; Gallī m.|gallisch; der Gallier
 - Rōma|Rōmae f.|Rom
 - urbs|urbis f. (Gen. Pl.: urbium)|Stadt
 - petere|petō, petīvī|angreifen, aufsuchen, fordern
 - capere|capiō, cēpī|fangen, ergreifen, erobern
 - cupere|cupiō, cupīvī|wollen, wünschen, mögen
-- Rōmānus, Rōmānus|-a, -um; Rōmānī m.|römisch; der Römer
+- Rōmānus|-a, -um; Rōmānī m.|römisch; der Römer
 - fēmina|fēminae f.|Frau
 - arx|arcis f. (Gen. Pl.: arcium)|Festung, Anhöhe
 - fugere|fugiō, fūgī|fliehen, meiden
-- obsidēre|obs ideō, obsēdī|belagern
+- obsidēre|obsideō, obsēdī|belagern
 - mīles|mīlitis m.|Soldat
 - famēs|famis f.|Hunger
 - tamen|Konj.|dennoch, trotzdem
@@ -56,9 +56,9 @@ Bei fotografisch schwer lesbaren Feldern wurden nur sprachlich sicher rekonstrui
 
 ## 11 (S. 154-155)
 
-- Trōiānus, Trōiānus|-a, -um; Trōiānī m.|trojanisch; der Trojaner
+- Trōiānus|-a, -um; Trōiānī m.|trojanisch; der Trojaner
 - diū|Adv.|lange
-- Graecus, Graecus|-a, -um; Graecī m.|griechisch; der Grieche
+- Graecus|-a, -um; Graecī m.|griechisch; der Grieche
 - ubīque|Adv.|überall
 - prō|Präp. + Abl.|für
 - timēre|timeō, timuī|sich fürchten, Angst haben
