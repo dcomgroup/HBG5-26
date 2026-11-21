@@ -1,5 +1,7 @@
 # Changelog
 
+- v1.5.1 (2026-11-21): Bestätigter Panda-Reset für den lokalen Latein-Lernstand. Nur bei leerer Cloud-Historie und Outbox. Andere Fächer bleiben unverändert.
+
 - v1.5.0 (2026-11-21): Nach UX-Freigabe bestehende URL-only-Supabase-Anbindung der Latein-App für Klassenarbeit 01 eingebunden. Vokabelstände verwenden dieselben Cloud-Karten-IDs wie bestehender Lateintrainer; Grammatikfragen erhalten eigene IDs. Lokale IndexedDB- und localStorage-Stände bleiben bestehen; Cloud-Ereignisse werden beim Start vorsichtig zusammengeführt, Offline-Outbox bleibt aktiv. Keine Schemaänderung. Zwei-Geräte-/Browser-Abnahme und Offline-Konflikttests noch offen.
 - v1.4.0 (2026-11-21): 58 Vokabeln mit grammatischen Angaben.
 - v1.3.2 (2026-11-21): Fehlende Buchangaben kenntlich gemacht.
