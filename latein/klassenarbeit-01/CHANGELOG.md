@@ -1,3 +1,4 @@
 # Changelog
 
-- v1.0.0 (2026-11-21): Lokaler Prototyp zur Klassenarbeit am 01.12.2026. Lektion-1-Appdaten und archivierte Lektion-2-Vokabeln, 8er-Runden und gewichtete Wiederholung. Keine Supabase-Anbindung.
+- v1.1.0 (2026-11-21): Neuaufbau mit erprobter Latein-Karteikartenbedienung, Mathe-Lernzielbalken (grün/gelb/grau), gemeinsamen Latein-Vokabelständen in IndexedDB, gemischten Vokabel-, Grammatik- und Satzaufgaben. Lokaler UX-Prototyp, keine Supabase-Anbindung. Vorheriger lokaler Klassenarbeit-01-Speicher bleibt unverändert.
+- v1.0.0 (2026-11-21): Erster lokaler Prototyp.
