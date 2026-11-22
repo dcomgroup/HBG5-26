@@ -1,5 +1,7 @@
 # Changelog
 
+- v1.6.0 (2026-11-22): Klassenarbeit auf Lektionen 2 und 3 korrigiert. 62 Vokabeleinträge direkt aus Bucharchiv S. 138–141; Lektion-1-only-Karten entfernt. Grammatik- und Satzfragen an Lektionen 2/3 angepasst und separat versioniert, damit alte Fragebewertungen nicht übernommen werden. Gemeinsame Vokabelhistorie und Panda-Reset bleiben erhalten. Keine Datenbank-Schemaänderung.
+
 - v1.5.3 (2026-11-21): Einmaliger Reset-Knopf ausschließlich für Panda-Latein. Nach Betätigung wird der Knopf mit lokalem dauerhaften Marker ausgeblendet. Reset nur bei leerer Cloud-Latein-Historie und leerer Outbox. Andere Profile und Fächer unberührt.
 
 - v1.5.2 (2026-11-21): Unerwünschten Reset-Knopf entfernt. Keine Lernstände verändert. Selektive Rücknahme heutiger lokaler Testantworten erfordert Zugriff auf die Browserdaten; ältere Stände bleiben geschützt.
