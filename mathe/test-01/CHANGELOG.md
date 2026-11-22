@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.1 - 2026-11-22
+- Multiple-Choice-Antworten werden pro Frage zufällig angeordnet und anhand der ursprünglichen richtigen Antwort bewertet.
+- Zeichenaufgaben behalten die sinnvolle Selbstbewertungs-Reihenfolge.
+- Supabase-Auswirkung: keine; bestehende Lernstände und Ereignisformate bleiben unverändert.
+
+# Changelog
+
 ## v1.1.0 - 2026-11-22
 - Schnellcheck: täglicher Fortschritt ab 0 %, adaptive Stichproben nach vereinfachter FSRS-Vergessensschätzung.
 - Richtige Antworten beschleunigen den Fortschritt, Fehler verzögern ihn.
