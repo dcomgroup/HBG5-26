@@ -35,14 +35,17 @@ async function sync(options={}){
     }
     if(stamp>Number(p._cloudTotalsAt||0)){
      p.answers=Number(state.answers)||0;p.rounds=Number(state.rounds)||0;
-     p.last=state.last||p.last;p._cloudTotalsAt=stamp;
+     p.last=state.last||p.last;
+     if(state.daily&&(!p.daily||state.daily.date>p.daily.date||state.daily.date===p.daily.date&&stamp>Number(p._cloudTotalsAt||0)))p.daily=state.daily;
+     if(state.badges){p.badges||={};p.badges.days=[...new Set([...(p.badges.days||[]),...(state.badges.days||[])])];for(const k of ["started","first100","threeDays","master"])p.badges[k]=!!(p.badges[k]||state.badges[k])}
+     p._cloudTotalsAt=stamp;
     }
    }else if(/^\d{1,3}$/.test(id)){
     if(p.states[id]!==undefined&&!p._cloudStamps[id]){
      localStorage.setItem("hbg5-26-schnellcheck-local-backup:"+slug,JSON.stringify(p));
     }
     if(stamp>Number(p._cloudStamps[id]||0)){
-     p.states[id]=Math.max(0,Math.min(2,Number(state.level)||0));p._cloudStamps[id]=stamp;
+     p.states[id]=Math.max(0,Math.min(2,Number(state.level)||0));if(state.memory){p.memory||={};p.memory[id]=state.memory}p._cloudStamps[id]=stamp;
     }
    }
   }
